@@ -1,0 +1,32 @@
+import { prisma } from "@/server/db/prisma";
+
+export type SecurityLogAction =
+  | "login"
+  | "login_failed"
+  | "phone_verified"
+  | "phone_verification_sent"
+  | "password_recovery"
+  | "contact_created"
+  | "contact_updated"
+  | "contact_deleted"
+  | "record_created"
+  | "record_updated"
+  | "record_deleted"
+  | "record_restored"
+  | "account_updated";
+
+export async function writeSecurityLog(input: {
+  action: SecurityLogAction;
+  userId?: string;
+  ipAddress?: string;
+  metadata?: Record<string, string | number | boolean | null>;
+}) {
+  await prisma.securityLog.create({
+    data: {
+      action: input.action,
+      userId: input.userId,
+      ipAddress: input.ipAddress,
+      metadata: input.metadata
+    }
+  });
+}

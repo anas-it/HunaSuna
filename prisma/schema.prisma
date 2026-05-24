@@ -1,0 +1,171 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                        String                 @id @default(cuid())
+  login                     String                 @unique
+  passwordHash              String
+  firstName                 String?
+  lastName                  String?
+  phone                     String                 @unique
+  phoneVerified             Boolean                @default(false)
+  email                     String?                @unique
+  emailUsableForRecovery    Boolean                @default(false)
+  createdAt                 DateTime               @default(now())
+  updatedAt                 DateTime               @updatedAt
+  lastLoginAt               DateTime?
+  contacts                  Contact[]
+  records                   Record[]
+  sessions                  UserSession[]
+  loginAttempts             LoginAttempt[]
+  smsCodes                  SmsCode[]
+  passwordRecoveryCodes     PasswordRecoveryCode[]
+  securityLogs              SecurityLog[]
+  archivedRecords           ArchivedRecord[]
+}
+
+model UserSession {
+  id          String   @id @default(cuid())
+  userId      String
+  tokenHash   String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  userAgent   String?
+  ipAddress   String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model LoginAttempt {
+  id          String   @id @default(cuid())
+  userId      String?
+  target      String
+  ipAddress   String?
+  success     Boolean
+  createdAt   DateTime @default(now())
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([target, ipAddress, createdAt])
+  @@index([userId])
+}
+
+model Contact {
+  id              String    @id @default(cuid())
+  userId          String
+  firstName       String
+  lastName        String
+  phone           String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  senderRecords   Record[]  @relation("RecordSenderContact")
+  receiverRecords Record[]  @relation("RecordReceiverContact")
+
+  @@index([userId])
+  @@index([userId, phone])
+  @@index([deletedAt])
+}
+
+model Record {
+  id                         String    @id @default(cuid())
+  userId                     String
+  senderContactId            String?
+  senderFirstNameSnapshot    String?
+  senderLastNameSnapshot     String?
+  senderPhoneSnapshot        String?
+  receiverContactId          String?
+  receiverFirstNameSnapshot  String?
+  receiverLastNameSnapshot   String?
+  receiverPhoneSnapshot      String?
+  amount                     String
+  currency                   String
+  rate                       String
+  timezone                   String
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+  deletedAt                  DateTime?
+  restoreUntil               DateTime?
+  archivedAt                 DateTime?
+  user                       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  senderContact              Contact?  @relation("RecordSenderContact", fields: [senderContactId], references: [id], onDelete: SetNull)
+  receiverContact            Contact?  @relation("RecordReceiverContact", fields: [receiverContactId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([userId, createdAt])
+  @@index([userId, deletedAt])
+  @@index([userId, restoreUntil])
+  @@index([senderContactId])
+  @@index([receiverContactId])
+  @@index([senderPhoneSnapshot])
+  @@index([receiverPhoneSnapshot])
+}
+
+model SmsCode {
+  id          String    @id @default(cuid())
+  userId      String?
+  phone       String
+  codeHash    String
+  purpose     String
+  ipAddress   String?
+  attempts    Int       @default(0)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([phone, createdAt])
+  @@index([ipAddress, createdAt])
+  @@index([expiresAt])
+}
+
+model PasswordRecoveryCode {
+  id          String    @id @default(cuid())
+  userId      String?
+  channel     String
+  target      String
+  codeHash    String
+  attempts    Int       @default(0)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([target, createdAt])
+  @@index([expiresAt])
+}
+
+model SecurityLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String
+  ipAddress   String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model ArchivedRecord {
+  id                String   @id @default(cuid())
+  userId            String
+  originalRecordId  String
+  data              Json
+  archivedAt        DateTime @default(now())
+  deleteAfter       DateTime
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([originalRecordId])
+  @@index([deleteAfter])
+}
