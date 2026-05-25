@@ -18,15 +18,27 @@ export async function sendSmsCode(input: SendSmsCodeInput) {
   const isDevelopment = process.env.NODE_ENV === "development";
 
   if (!isTwilioVerifyConfigured()) {
+    if (!isDevelopment) {
+      throw new Error(
+        "SMS-сервис не настроен. Проверьте переменные Twilio в Vercel."
+      );
+    }
+
     return {
       delivered: false,
-      developmentCode: isDevelopment ? input.code : undefined
+      developmentCode: input.code
     };
   }
 
   try {
-    await sendTwilioVerifyCode(input.phone);
-  } catch {
+    const result = await sendTwilioVerifyCode(input.phone);
+
+    if (!result.delivered) {
+      throw new Error(`Twilio returned status: ${result.status}`);
+    }
+  } catch (error) {
+    console.error("Twilio Verify SMS failed", error);
+
     throw new Error(
       "Не удалось отправить SMS-код. Проверьте номер телефона и настройки Twilio."
     );
