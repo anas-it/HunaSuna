@@ -12,7 +12,11 @@ import { normalizePhone } from "@/lib/phone";
 import { createNumericCode, hashCode, verifyCode } from "@/server/auth/code";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { writeSecurityLog } from "@/server/logs/security-log.service";
-import { sendSmsCode } from "@/server/sms/sms.service";
+import {
+  isSmsProviderConfigured,
+  sendSmsCode,
+  verifySmsCode
+} from "@/server/sms/sms.service";
 import {
   loginSchema,
   passwordRecoverySchema,
@@ -301,7 +305,14 @@ export async function verifyPhone(userId: string, input: { phone: string; code: 
     }
   });
 
-  if (!code || !verifyCode(data.code, code.codeHash)) {
+  const isValidCode = isSmsProviderConfigured()
+    ? await verifySmsCode({
+        phone,
+        code: data.code
+      })
+    : Boolean(code && verifyCode(data.code, code.codeHash));
+
+  if (!code || !isValidCode) {
     if (code) {
       await prisma.smsCode.update({
         where: {
@@ -390,13 +401,14 @@ export async function requestPasswordRecovery(targetInput: string, meta?: Reques
     }
   });
 
-  if (channel === "sms") {
-    await sendSmsCode({
-      phone: user.phone,
-      code,
-      purpose: "password_recovery"
-    });
-  }
+  const smsResult =
+    channel === "sms"
+      ? await sendSmsCode({
+          phone: user.phone,
+          code,
+          purpose: "password_recovery"
+        })
+      : undefined;
 
   await writeSecurityLog({
     action: "password_recovery",
@@ -408,7 +420,11 @@ export async function requestPasswordRecovery(targetInput: string, meta?: Reques
   });
 
   return {
-    developmentCode: process.env.NODE_ENV === "development" ? code : undefined
+    developmentCode:
+      smsResult?.developmentCode ??
+      (channel === "email" && process.env.NODE_ENV === "development"
+        ? code
+        : undefined)
   };
 }
 
@@ -437,7 +453,32 @@ export async function resetPassword(input: {
     throw new Error("Код восстановления недействителен");
   }
 
-  if (!verifyCode(data.code, recoveryCode.codeHash)) {
+  const recoverySmsUser =
+    recoveryCode.userId &&
+    recoveryCode.channel === "sms" &&
+    isSmsProviderConfigured()
+      ? await prisma.user.findUnique({
+          where: {
+            id: recoveryCode.userId
+          },
+          select: {
+            phone: true
+          }
+        })
+      : undefined;
+
+  const isVerifiedBySms = recoverySmsUser
+    ? await verifySmsCode({
+        phone: recoverySmsUser.phone,
+        code: data.code
+      })
+    : false;
+
+  const isValidRecoveryCode = recoverySmsUser
+    ? isVerifiedBySms
+    : verifyCode(data.code, recoveryCode.codeHash);
+
+  if (!isValidRecoveryCode) {
     await prisma.passwordRecoveryCode.update({
       where: {
         id: recoveryCode.id
