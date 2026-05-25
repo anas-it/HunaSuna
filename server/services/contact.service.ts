@@ -10,7 +10,15 @@ type ContactInput = {
   whatsapp?: string;
 };
 
-export async function listContacts(userId: string) {
+export type ContactListItem = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  whatsapp: string | null;
+};
+
+export async function listContacts(userId: string): Promise<ContactListItem[]> {
   return prisma.contact.findMany({
     where: {
       userId,
