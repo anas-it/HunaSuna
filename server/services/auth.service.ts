@@ -1,22 +1,13 @@
 import { prisma } from "@/server/db/prisma";
-import {
-  LOGIN_BLOCK_MINUTES,
-  MAX_FAILED_LOGIN_ATTEMPTS,
-  MAX_SMS_PER_WINDOW,
-  SMS_CODE_TTL_MINUTES,
-  SMS_WINDOW_MINUTES
-} from "@/lib/constants";
+import { LOGIN_BLOCK_MINUTES, MAX_FAILED_LOGIN_ATTEMPTS } from "@/lib/constants";
 import { addMinutes } from "@/lib/date";
 import { normalizePhone } from "@/lib/phone";
-import { createNumericCode, hashCode, verifyCode } from "@/server/auth/code";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { writeSecurityLog } from "@/server/logs/security-log.service";
-import { sendSmsCode } from "@/server/sms/sms.service";
 import {
   loginSchema,
   passwordRecoverySchema,
-  registerSchema,
-  smsCodeSchema
+  registerSchema
 } from "@/server/validators/auth.validator";
 
 type RequestMeta = {
@@ -96,83 +87,6 @@ async function assertLoginAllowed(target: string, ipAddress?: string) {
       "Слишком много неправильных попыток. Попробуйте через 30 минут."
     );
   }
-}
-
-export async function requestPhoneVerification(userId: string, meta?: RequestMeta) {
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId
-    }
-  });
-
-  if (!user) {
-    throw new Error("Пользователь не найден");
-  }
-
-  if (!user.phone) {
-    throw new Error("Мобильный номер не указан");
-  }
-
-  const since = addMinutes(new Date(), -SMS_WINDOW_MINUTES);
-  const recentCodes = await prisma.smsCode.count({
-    where: {
-      purpose: "phone_verification",
-      OR: meta?.ipAddress
-        ? [
-            {
-              phone: user.phone,
-              createdAt: {
-                gte: since
-              }
-            },
-            {
-              ipAddress: meta.ipAddress,
-              createdAt: {
-                gte: since
-              }
-            }
-          ]
-        : [
-            {
-              phone: user.phone,
-              createdAt: {
-                gte: since
-              }
-            }
-          ]
-    }
-  });
-
-  if (recentCodes >= MAX_SMS_PER_WINDOW) {
-    throw new Error("Слишком много SMS-кодов. Попробуйте позже.");
-  }
-
-  const code = createNumericCode();
-
-  await prisma.smsCode.create({
-    data: {
-      userId: user.id,
-      phone: user.phone,
-      codeHash: hashCode(code),
-      purpose: "phone_verification",
-      ipAddress: meta?.ipAddress,
-      expiresAt: addMinutes(new Date(), SMS_CODE_TTL_MINUTES)
-    }
-  });
-
-  const result = await sendSmsCode({
-    phone: user.phone,
-    code,
-    purpose: "phone_verification"
-  });
-
-  await writeSecurityLog({
-    action: "phone_verification_sent",
-    userId: user.id,
-    ipAddress: meta?.ipAddress
-  });
-
-  return result;
 }
 
 export async function registerUser(input: RegisterInput, meta?: RequestMeta) {
@@ -271,72 +185,6 @@ export async function loginUser(input: LoginInput, meta?: RequestMeta) {
   return {
     user
   };
-}
-
-export async function verifyPhone(
-  userId: string,
-  input: { phone: string; code: string },
-  meta?: RequestMeta
-) {
-  const data = smsCodeSchema.parse(input);
-  const phone = normalizePhone(data.phone);
-
-  const code = await prisma.smsCode.findFirst({
-    where: {
-      userId,
-      phone,
-      purpose: "phone_verification",
-      consumedAt: null,
-      expiresAt: {
-        gt: new Date()
-      }
-    },
-    orderBy: {
-      createdAt: "desc"
-    }
-  });
-
-  if (!code || !verifyCode(data.code, code.codeHash)) {
-    if (code) {
-      await prisma.smsCode.update({
-        where: {
-          id: code.id
-        },
-        data: {
-          attempts: {
-            increment: 1
-          }
-        }
-      });
-    }
-
-    throw new Error("Неверный код подтверждения");
-  }
-
-  await prisma.$transaction([
-    prisma.smsCode.update({
-      where: {
-        id: code.id
-      },
-      data: {
-        consumedAt: new Date()
-      }
-    }),
-    prisma.user.update({
-      where: {
-        id: userId
-      },
-      data: {
-        phoneVerified: true
-      }
-    })
-  ]);
-
-  await writeSecurityLog({
-    action: "phone_verified",
-    userId,
-    ipAddress: meta?.ipAddress
-  });
 }
 
 export async function requestPasswordRecovery(

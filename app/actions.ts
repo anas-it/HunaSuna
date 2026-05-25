@@ -1,21 +1,17 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getRequestMeta } from "@/server/auth/request";
 import {
   createSession,
   destroyCurrentSession,
-  requirePageSessionUser,
   requirePageUser
 } from "@/server/auth/session";
 import {
   loginUser,
   registerUser,
   requestPasswordRecovery,
-  requestPhoneVerification,
-  resetPassword,
-  verifyPhone
+  resetPassword
 } from "@/server/services/auth.service";
 import {
   createContact,
@@ -34,10 +30,6 @@ import {
   updateUserPassword,
   updateUserProfile
 } from "@/server/services/user.service";
-
-const DEV_SMS_COOKIE = "hunasuna_dev_sms_code";
-const DEV_RECOVERY_COOKIE = "hunasuna_dev_recovery_code";
-const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -60,52 +52,6 @@ function withError(path: string, error: unknown) {
   const separator = path.includes("?") ? "&" : "?";
 
   return `${path}${separator}error=${encodeURIComponent(errorMessage(error))}`;
-}
-
-async function storeDevelopmentCode(code?: string) {
-  const cookieStore = await cookies();
-
-  if (!IS_DEVELOPMENT || !code) {
-    cookieStore.set(DEV_SMS_COOKIE, "", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 0,
-      path: "/verify-phone"
-    });
-    return;
-  }
-
-  cookieStore.set(DEV_SMS_COOKIE, code, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 300,
-    path: "/verify-phone"
-  });
-}
-
-async function storeRecoveryCode(code?: string) {
-  const cookieStore = await cookies();
-
-  if (!IS_DEVELOPMENT || !code) {
-    cookieStore.set(DEV_RECOVERY_COOKIE, "", {
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 0,
-      path: "/forgot-password"
-    });
-    return;
-  }
-
-  cookieStore.set(DEV_RECOVERY_COOKIE, code, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 300,
-    path: "/forgot-password"
-  });
 }
 
 function personFromForm(formData: FormData, prefix: "sender" | "receiver") {
@@ -166,44 +112,6 @@ export async function loginAction(formData: FormData) {
   redirect(nextPath);
 }
 
-export async function verifyPhoneAction(formData: FormData) {
-  let nextPath = "/dashboard";
-
-  try {
-    const user = await requirePageSessionUser();
-    const meta = await getRequestMeta();
-
-    await verifyPhone(
-      user.id,
-      {
-        phone: user.phone ?? "",
-        code: text(formData, "code")
-      },
-      meta
-    );
-    await storeDevelopmentCode();
-  } catch (error) {
-    nextPath = withError("/verify-phone", error);
-  }
-
-  redirect(nextPath);
-}
-
-export async function resendVerificationCodeAction() {
-  let nextPath = "/verify-phone";
-
-  try {
-    const user = await requirePageSessionUser();
-    const meta = await getRequestMeta();
-    const result = await requestPhoneVerification(user.id, meta);
-    await storeDevelopmentCode(result.developmentCode);
-  } catch (error) {
-    nextPath = withError("/verify-phone", error);
-  }
-
-  redirect(nextPath);
-}
-
 export async function logoutAction() {
   await destroyCurrentSession();
   redirect("/login");
@@ -215,10 +123,8 @@ export async function requestPasswordRecoveryAction(formData: FormData) {
   try {
     const meta = await getRequestMeta();
     const result = await requestPasswordRecovery(text(formData, "target"), meta);
-    await storeRecoveryCode();
     nextPath = `/forgot-password?step=reset&target=${encodeURIComponent(text(formData, "target"))}&question=${encodeURIComponent(result.secretQuestion)}`;
   } catch (error) {
-    await storeRecoveryCode();
     nextPath = withError("/forgot-password", error);
   }
 
@@ -235,7 +141,6 @@ export async function resetPasswordAction(formData: FormData) {
       newPassword: text(formData, "newPassword"),
       confirmPassword: text(formData, "confirmPassword")
     });
-    await storeRecoveryCode();
   } catch (error) {
     nextPath = withError(
       `/forgot-password?step=reset&target=${encodeURIComponent(text(formData, "target"))}&question=${encodeURIComponent(text(formData, "secretQuestion"))}`,

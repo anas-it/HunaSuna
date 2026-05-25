@@ -31,7 +31,8 @@ export async function listContacts(userId: string): Promise<ContactListItem[]> {
       {
         lastName: "asc"
       }
-    ]
+    ],
+    take: 200
   });
 }
 
@@ -167,7 +168,8 @@ export async function getContactHistory(userId: string, contactId: string) {
     },
     orderBy: {
       createdAt: "desc"
-    }
+    },
+    take: 50
   });
 
   return {

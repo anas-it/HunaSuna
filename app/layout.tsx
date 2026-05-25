@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Инструмент учета информации о переводах"
 };
 
+export const preferredRegion = "fra1";
+
 export default function RootLayout({
   children
 }: Readonly<{

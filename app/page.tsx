@@ -1,13 +1,8 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
-import { getCurrentUser } from "@/server/auth/session";
 
-export default async function HomePage() {
-  const user = await getCurrentUser();
-  const primaryHref = user ? "/dashboard" : "/login";
-  const primaryLabel = user ? "Открыть кабинет" : "Войти";
-
+export default function HomePage() {
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#eef2f1] px-6 py-8 text-[#1f2937]">
       <div aria-hidden="true" className="home-background">
@@ -79,13 +74,11 @@ export default async function HomePage() {
 
         <div className="flex flex-wrap gap-3">
           <Button asChild>
-            <Link href={primaryHref}>{primaryLabel}</Link>
+            <Link href="/login">Войти</Link>
           </Button>
-          {!user ? (
-            <Button asChild variant="secondary">
-              <Link href="/register">Регистрация</Link>
-            </Button>
-          ) : null}
+          <Button asChild variant="secondary">
+            <Link href="/register">Регистрация</Link>
+          </Button>
         </div>
       </section>
     </main>

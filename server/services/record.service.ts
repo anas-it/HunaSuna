@@ -160,7 +160,8 @@ export async function listRecords(userId: string, filters?: RecordFilters) {
     },
     orderBy: {
       createdAt: "desc"
-    }
+    },
+    take: 100
   });
 }
 

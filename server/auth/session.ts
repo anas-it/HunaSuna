@@ -87,8 +87,19 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
         gt: new Date()
       }
     },
-    include: {
-      user: true
+    select: {
+      user: {
+        select: {
+          id: true,
+          login: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          phoneVerified: true,
+          email: true,
+          emailUsableForRecovery: true
+        }
+      }
     }
   });
 
