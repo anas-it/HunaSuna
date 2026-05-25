@@ -1,13 +1,21 @@
 import { restoreRecordAction } from "@/app/actions";
+import { PaginationNav } from "@/components/layout/pagination-nav";
 import { PageShell } from "@/components/layout/page-shell";
 import { Button } from "@/components/ui/button";
 import { daysLeft, formatDateTime, formatPerson } from "@/lib/format";
 import { requirePageUser } from "@/server/auth/session";
-import { listDeletedRecords } from "@/server/services/deleted-record.service";
+import { listDeletedRecordsPage } from "@/server/services/deleted-record.service";
 
-export default async function DeletedPage() {
+type DeletedPageProps = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+export default async function DeletedPage({ searchParams }: DeletedPageProps) {
   const user = await requirePageUser();
-  const records = await listDeletedRecords(user.id);
+  const params = await searchParams;
+  const { pagination, records } = await listDeletedRecordsPage(user.id, {
+    page: params.page
+  });
 
   return (
     <PageShell
@@ -58,7 +66,7 @@ export default async function DeletedPage() {
           ))}
         </div>
       )}
+      <PaginationNav basePath="/deleted" pagination={pagination} params={params} />
     </PageShell>
   );
 }
-

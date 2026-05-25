@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestMeta } from "@/server/auth/request";
 import { apiError, requireApiUser } from "@/server/auth/api";
-import { createContact, listContacts } from "@/server/services/contact.service";
+import { createContact, listContactsPage } from "@/server/services/contact.service";
 
-export async function GET() {
+export const preferredRegion = "fra1";
+export const runtime = "nodejs";
+
+export async function GET(request: NextRequest) {
   const { user, response } = await requireApiUser();
 
   if (!user) {
     return response;
   }
 
-  const contacts = await listContacts(user.id);
-  return NextResponse.json({ ok: true, contacts });
+  const searchParams = request.nextUrl.searchParams;
+  const result = await listContactsPage(user.id, {
+    page: searchParams.get("page"),
+    limit: searchParams.get("limit")
+  });
+
+  return NextResponse.json({ ok: true, ...result });
 }
 
 export async function POST(request: NextRequest) {
@@ -31,4 +39,3 @@ export async function POST(request: NextRequest) {
     return apiError(error);
   }
 }
-

@@ -3,6 +3,9 @@ import { getRequestMeta } from "@/server/auth/request";
 import { apiError, requireApiUser } from "@/server/auth/api";
 import { updateUserProfile } from "@/server/services/user.service";
 
+export const preferredRegion = "fra1";
+export const runtime = "nodejs";
+
 function publicUser(user: {
   id: string;
   login: string;

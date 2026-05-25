@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { SingleSubmitForm } from "@/components/forms/single-submit-form";
 import { SUPPORTED_CURRENCIES } from "@/lib/constants";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 type ContactOption = {
   id: string;
@@ -178,7 +179,7 @@ export function RecordForm({
 
   return (
     <div className="grid gap-5 rounded-lg border border-[#d8dee8] bg-white p-6">
-      <form action={action} className="grid gap-5" id={formId}>
+      <SingleSubmitForm action={action} className="grid gap-5" id={formId}>
         <div className="grid gap-5 md:grid-cols-2">
           <PersonFieldset
             contacts={contacts}
@@ -223,14 +224,19 @@ export function RecordForm({
             required
           />
         </div>
-      </form>
 
-      <div className="flex flex-wrap justify-end gap-3">
-        {actions}
-        <Button form={formId} type="submit">
-          {submitLabel}
-        </Button>
-      </div>
+        <div className="flex flex-wrap justify-end gap-3">
+          <SubmitButton pendingLabel="Сохранение...">
+            {submitLabel}
+          </SubmitButton>
+        </div>
+      </SingleSubmitForm>
+
+      {actions ? (
+        <div className="flex flex-wrap justify-end gap-3">
+          {actions}
+        </div>
+      ) : null}
     </div>
   );
 }

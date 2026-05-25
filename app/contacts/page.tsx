@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { MessageCircle, Pencil, Phone, UserPlus, Users } from "lucide-react";
 import { createContactAction } from "@/app/actions";
+import { SingleSubmitForm } from "@/components/forms/single-submit-form";
 import { Notice } from "@/components/layout/notice";
+import { PaginationNav } from "@/components/layout/pagination-nav";
 import { PageShell } from "@/components/layout/page-shell";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { requirePageUser } from "@/server/auth/session";
-import { listContacts } from "@/server/services/contact.service";
+import { listContactsPage } from "@/server/services/contact.service";
 
 type ContactsPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; message?: string; page?: string }>;
 };
 
 function contactInitials(firstName: string, lastName: string) {
@@ -18,14 +20,16 @@ function contactInitials(firstName: string, lastName: string) {
 export default async function ContactsPage({ searchParams }: ContactsPageProps) {
   const user = await requirePageUser();
   const params = await searchParams;
-  const contacts = await listContacts(user.id);
+  const { contacts, pagination } = await listContactsPage(user.id, {
+    page: params.page
+  });
 
   return (
     <PageShell title="Контакты">
-      <Notice error={params.error} />
+      <Notice error={params.error} message={params.message} />
 
       <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
-        <form
+        <SingleSubmitForm
           action={createContactAction}
           className="h-fit rounded-md border border-[#d8dee8] bg-white p-5 shadow-sm"
         >
@@ -35,7 +39,7 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
             </div>
             <div>
               <h2 className="text-lg font-semibold text-[#1f2937]">Новый контакт</h2>
-              <p className="text-sm text-[#64748b]">Всего контактов: {contacts.length}</p>
+              <p className="text-sm text-[#64748b]">Всего контактов: {pagination.total}</p>
             </div>
           </div>
 
@@ -63,12 +67,12 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
               name="whatsapp"
               placeholder="WhatsApp"
             />
-            <Button className="mt-1 gap-2">
+            <SubmitButton className="mt-1 gap-2" pendingLabel="Сохранение...">
               <UserPlus className="h-4 w-4" />
               Добавить
-            </Button>
+            </SubmitButton>
           </div>
-        </form>
+        </SingleSubmitForm>
 
         <section>
           <div className="mb-4 flex items-center justify-between gap-3 rounded-md border border-[#d8dee8] bg-[#f1f5f9] px-4 py-3">
@@ -77,7 +81,7 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
               Список контактов
             </div>
             <span className="rounded-md border border-[#d8dee8] bg-white px-2.5 py-1 text-xs font-medium text-[#64748b]">
-              {contacts.length}
+              {pagination.total}
             </span>
           </div>
 
@@ -123,6 +127,7 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
               ))}
             </div>
           )}
+          <PaginationNav basePath="/contacts" pagination={pagination} params={params} />
         </section>
       </div>
     </PageShell>

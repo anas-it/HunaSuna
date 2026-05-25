@@ -74,6 +74,7 @@ model Contact {
 
   @@index([userId])
   @@index([userId, phone])
+  @@index([userId, deletedAt, firstName, lastName], map: "Contact_user_active_name_idx")
   @@index([deletedAt])
 }
 
@@ -105,6 +106,10 @@ model Record {
   @@index([userId, createdAt])
   @@index([userId, deletedAt])
   @@index([userId, restoreUntil])
+  @@index([userId, deletedAt, archivedAt, createdAt], map: "Record_user_active_date_idx")
+  @@index([userId, senderContactId, deletedAt, archivedAt, createdAt], map: "Record_user_sender_history_idx")
+  @@index([userId, receiverContactId, deletedAt, archivedAt, createdAt], map: "Record_user_receiver_history_idx")
+  @@index([restoreUntil, archivedAt], map: "Record_archive_due_idx")
   @@index([senderContactId])
   @@index([receiverContactId])
   @@index([senderPhoneSnapshot])
@@ -162,13 +167,12 @@ model SecurityLog {
 model ArchivedRecord {
   id                String   @id @default(cuid())
   userId            String
-  originalRecordId  String
+  originalRecordId  String   @unique
   data              Json
   archivedAt        DateTime @default(now())
   deleteAfter       DateTime
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([originalRecordId])
   @@index([deleteAfter])
 }

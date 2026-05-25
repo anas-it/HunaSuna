@@ -7,6 +7,9 @@ import {
   updateRecord
 } from "@/server/services/record.service";
 
+export const preferredRegion = "fra1";
+export const runtime = "nodejs";
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
@@ -61,4 +64,3 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     return apiError(error);
   }
 }
-

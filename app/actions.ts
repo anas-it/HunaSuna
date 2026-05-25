@@ -54,6 +54,12 @@ function withError(path: string, error: unknown) {
   return `${path}${separator}error=${encodeURIComponent(errorMessage(error))}`;
 }
 
+function withMessage(path: string, message: string) {
+  const separator = path.includes("?") ? "&" : "?";
+
+  return `${path}${separator}message=${encodeURIComponent(message)}`;
+}
+
 function personFromForm(formData: FormData, prefix: "sender" | "receiver") {
   const contactId = optionalText(formData, `${prefix}ContactId`);
 
@@ -152,7 +158,7 @@ export async function resetPasswordAction(formData: FormData) {
 }
 
 export async function createContactAction(formData: FormData) {
-  let nextPath = "/contacts";
+  let nextPath = withMessage("/contacts", "Контакт добавлен");
 
   try {
     const user = await requirePageUser();
@@ -175,7 +181,7 @@ export async function createContactAction(formData: FormData) {
 }
 
 export async function updateContactAction(contactId: string, formData: FormData) {
-  let nextPath = `/contacts/${contactId}`;
+  let nextPath = withMessage(`/contacts/${contactId}`, "Контакт сохранен");
 
   try {
     const user = await requirePageUser();
@@ -206,7 +212,7 @@ export async function deleteContactAction(contactId: string) {
 }
 
 export async function createRecordAction(formData: FormData) {
-  let nextPath = "/records";
+  let nextPath = withMessage("/records", "Запись добавлена");
 
   try {
     const user = await requirePageUser();
@@ -231,7 +237,7 @@ export async function createRecordAction(formData: FormData) {
 }
 
 export async function updateRecordAction(recordId: string, formData: FormData) {
-  let nextPath = "/records";
+  let nextPath = withMessage("/records", "Запись сохранена");
 
   try {
     const user = await requirePageUser();

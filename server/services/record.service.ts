@@ -1,6 +1,14 @@
 import { Prisma } from "@prisma/client";
-import { DELETED_RECORD_RESTORE_DAYS } from "@/lib/constants";
+import {
+  DELETED_RECORD_RESTORE_DAYS,
+  MAX_RECORDS_PAGE_SIZE,
+  RECORDS_PAGE_SIZE
+} from "@/lib/constants";
 import { addDays } from "@/lib/date";
+import {
+  createPaginationMeta,
+  resolvePagination
+} from "@/lib/pagination";
 import { prisma } from "@/server/db/prisma";
 import { writeSecurityLog } from "@/server/logs/security-log.service";
 import { recordSchema } from "@/server/validators/record.validator";
@@ -21,10 +29,32 @@ type RecordInput = {
 };
 
 type RecordFilters = {
+  limit?: number | string | null;
+  page?: number | string | null;
   query?: string;
   contactId?: string;
   phone?: string;
 };
+
+export const recordListSelect = {
+  id: true,
+  createdAt: true,
+  senderFirstNameSnapshot: true,
+  senderLastNameSnapshot: true,
+  senderPhoneSnapshot: true,
+  receiverFirstNameSnapshot: true,
+  receiverLastNameSnapshot: true,
+  receiverPhoneSnapshot: true,
+  amount: true,
+  currency: true,
+  rate: true,
+  timezone: true,
+  restoreUntil: true
+} satisfies Prisma.RecordSelect;
+
+export type RecordListItem = Prisma.RecordGetPayload<{
+  select: typeof recordListSelect;
+}>;
 
 async function resolvePerson(userId: string, person: PersonInput) {
   if (person.contactId && person.contactId !== "manual") {
@@ -150,6 +180,11 @@ function searchWhere(filters?: RecordFilters): Prisma.RecordWhereInput[] {
 
 export async function listRecords(userId: string, filters?: RecordFilters) {
   const and = searchWhere(filters);
+  const pagination = resolvePagination(
+    filters,
+    RECORDS_PAGE_SIZE,
+    MAX_RECORDS_PAGE_SIZE
+  );
 
   return prisma.record.findMany({
     where: {
@@ -158,11 +193,47 @@ export async function listRecords(userId: string, filters?: RecordFilters) {
       archivedAt: null,
       ...(and.length ? { AND: and } : {})
     },
+    select: recordListSelect,
     orderBy: {
       createdAt: "desc"
     },
-    take: 100
+    skip: pagination.skip,
+    take: pagination.limit
   });
+}
+
+export async function listRecordsPage(userId: string, filters?: RecordFilters) {
+  const and = searchWhere(filters);
+  const pagination = resolvePagination(
+    filters,
+    RECORDS_PAGE_SIZE,
+    MAX_RECORDS_PAGE_SIZE
+  );
+  const where: Prisma.RecordWhereInput = {
+    userId,
+    deletedAt: null,
+    archivedAt: null,
+    ...(and.length ? { AND: and } : {})
+  };
+  const [records, total] = await prisma.$transaction([
+    prisma.record.findMany({
+      where,
+      select: recordListSelect,
+      orderBy: {
+        createdAt: "desc"
+      },
+      skip: pagination.skip,
+      take: pagination.limit
+    }),
+    prisma.record.count({
+      where
+    })
+  ]);
+
+  return {
+    records,
+    pagination: createPaginationMeta(pagination, total)
+  };
 }
 
 export async function getRecord(userId: string, recordId: string) {

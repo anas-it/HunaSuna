@@ -1,4 +1,4 @@
-import { ARCHIVE_RETENTION_MONTHS } from "@/lib/constants";
+import { ARCHIVE_BATCH_SIZE, ARCHIVE_RETENTION_MONTHS } from "@/lib/constants";
 import { addMonths } from "@/lib/date";
 import { prisma } from "@/server/db/prisma";
 
@@ -13,13 +13,21 @@ export async function archiveExpiredDeletedRecords() {
         lte: now
       },
       archivedAt: null
-    }
+    },
+    orderBy: {
+      restoreUntil: "asc"
+    },
+    take: ARCHIVE_BATCH_SIZE
   });
 
   for (const record of expiredRecords) {
     await prisma.$transaction([
-      prisma.archivedRecord.create({
-        data: {
+      prisma.archivedRecord.upsert({
+        where: {
+          originalRecordId: record.id
+        },
+        update: {},
+        create: {
           userId: record.userId,
           originalRecordId: record.id,
           data: JSON.parse(JSON.stringify(record)),
@@ -38,7 +46,8 @@ export async function archiveExpiredDeletedRecords() {
   }
 
   return {
-    archivedCount: expiredRecords.length
+    archivedCount: expiredRecords.length,
+    hasMore: expiredRecords.length === ARCHIVE_BATCH_SIZE
   };
 }
 

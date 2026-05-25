@@ -2,6 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { cleanupArchivedRecordsJob } from "@/server/jobs/cleanup-archived-records.job";
 import { cleanupDeletedRecordsJob } from "@/server/jobs/cleanup-deleted-records.job";
 
+export const preferredRegion = "fra1";
+export const runtime = "nodejs";
+
 export async function GET(request: NextRequest) {
   const secret = request.headers.get("authorization")?.replace("Bearer ", "");
 
@@ -18,4 +21,3 @@ export async function GET(request: NextRequest) {
     archived
   });
 }
-

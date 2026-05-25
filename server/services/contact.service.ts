@@ -1,6 +1,19 @@
 import { prisma } from "@/server/db/prisma";
+import {
+  CONTACT_HISTORY_PAGE_SIZE,
+  CONTACT_SELECT_LIMIT,
+  CONTACTS_PAGE_SIZE,
+  MAX_RECORDS_PAGE_SIZE,
+  MAX_CONTACTS_PAGE_SIZE
+} from "@/lib/constants";
+import {
+  createPaginationMeta,
+  resolvePagination,
+  type PaginationInput
+} from "@/lib/pagination";
 import { normalizePhone } from "@/lib/phone";
 import { writeSecurityLog } from "@/server/logs/security-log.service";
+import { recordListSelect } from "@/server/services/record.service";
 import { contactSchema } from "@/server/validators/contact.validator";
 
 type ContactInput = {
@@ -18,12 +31,37 @@ export type ContactListItem = {
   whatsapp: string | null;
 };
 
-export async function listContacts(userId: string): Promise<ContactListItem[]> {
-  return prisma.contact.findMany({
-    where: {
-      userId,
-      deletedAt: null
+const contactListSelect = {
+  id: true,
+  firstName: true,
+  lastName: true,
+  phone: true,
+  whatsapp: true
+} as const;
+
+function activeContactsWhere(userId: string) {
+  return {
+    userId,
+    deletedAt: null
+  };
+}
+
+export async function listContacts(
+  userId: string,
+  options?: PaginationInput
+): Promise<ContactListItem[]> {
+  const pagination = resolvePagination(
+    {
+      limit: options?.limit ?? CONTACT_SELECT_LIMIT,
+      page: options?.page
     },
+    CONTACT_SELECT_LIMIT,
+    CONTACT_SELECT_LIMIT
+  );
+
+  return prisma.contact.findMany({
+    where: activeContactsWhere(userId),
+    select: contactListSelect,
     orderBy: [
       {
         firstName: "asc"
@@ -32,8 +70,45 @@ export async function listContacts(userId: string): Promise<ContactListItem[]> {
         lastName: "asc"
       }
     ],
-    take: 200
+    skip: pagination.skip,
+    take: pagination.limit
   });
+}
+
+export async function listContactsPage(
+  userId: string,
+  options?: PaginationInput
+) {
+  const pagination = resolvePagination(
+    options,
+    CONTACTS_PAGE_SIZE,
+    MAX_CONTACTS_PAGE_SIZE
+  );
+  const where = activeContactsWhere(userId);
+  const [contacts, total] = await prisma.$transaction([
+    prisma.contact.findMany({
+      where,
+      select: contactListSelect,
+      orderBy: [
+        {
+          firstName: "asc"
+        },
+        {
+          lastName: "asc"
+        }
+      ],
+      skip: pagination.skip,
+      take: pagination.limit
+    }),
+    prisma.contact.count({
+      where
+    })
+  ]);
+
+  return {
+    contacts,
+    pagination: createPaginationMeta(pagination, total)
+  };
 }
 
 export async function getContact(userId: string, contactId: string) {
@@ -149,31 +224,48 @@ export async function deleteContact(
   });
 }
 
-export async function getContactHistory(userId: string, contactId: string) {
+export async function getContactHistory(
+  userId: string,
+  contactId: string,
+  options?: PaginationInput
+) {
   const contact = await getContact(userId, contactId);
-
-  const records = await prisma.record.findMany({
-    where: {
-      userId,
-      deletedAt: null,
-      archivedAt: null,
-      OR: [
-        {
-          senderContactId: contactId
-        },
-        {
-          receiverContactId: contactId
-        }
-      ]
-    },
-    orderBy: {
-      createdAt: "desc"
-    },
-    take: 50
-  });
+  const pagination = resolvePagination(
+    options,
+    CONTACT_HISTORY_PAGE_SIZE,
+    MAX_RECORDS_PAGE_SIZE
+  );
+  const where = {
+    userId,
+    deletedAt: null,
+    archivedAt: null,
+    OR: [
+      {
+        senderContactId: contactId
+      },
+      {
+        receiverContactId: contactId
+      }
+    ]
+  };
+  const [records, total] = await prisma.$transaction([
+    prisma.record.findMany({
+      where,
+      select: recordListSelect,
+      orderBy: {
+        createdAt: "desc"
+      },
+      skip: pagination.skip,
+      take: pagination.limit
+    }),
+    prisma.record.count({
+      where
+    })
+  ]);
 
   return {
     contact,
-    records
+    records,
+    pagination: createPaginationMeta(pagination, total)
   };
 }

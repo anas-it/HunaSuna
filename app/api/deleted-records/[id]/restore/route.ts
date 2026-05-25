@@ -3,6 +3,9 @@ import { getRequestMeta } from "@/server/auth/request";
 import { apiError, requireApiUser } from "@/server/auth/api";
 import { restoreDeletedRecord } from "@/server/services/deleted-record.service";
 
+export const preferredRegion = "fra1";
+export const runtime = "nodejs";
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
@@ -23,4 +26,3 @@ export async function POST(_request: NextRequest, context: RouteContext) {
     return apiError(error);
   }
 }
-

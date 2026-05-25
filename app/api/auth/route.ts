@@ -9,6 +9,9 @@ import {
   resetPassword
 } from "@/server/services/auth.service";
 
+export const preferredRegion = "fra1";
+export const runtime = "nodejs";
+
 type ApiUser = {
   id: string;
   login: string;

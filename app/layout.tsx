@@ -7,6 +7,7 @@ export const metadata: Metadata = {
 };
 
 export const preferredRegion = "fra1";
+export const runtime = "nodejs";
 
 export default function RootLayout({
   children

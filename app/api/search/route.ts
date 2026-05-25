@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireApiUser } from "@/server/auth/api";
 import { searchRecords } from "@/server/services/search.service";
 
+export const preferredRegion = "fra1";
+export const runtime = "nodejs";
+
 export async function GET(request: NextRequest) {
   const { user, response } = await requireApiUser();
 
@@ -10,11 +13,13 @@ export async function GET(request: NextRequest) {
   }
 
   const searchParams = request.nextUrl.searchParams;
-  const records = await searchRecords(user.id, {
+  const result = await searchRecords(user.id, {
     query: searchParams.get("query") ?? undefined,
     contactId: searchParams.get("contactId") ?? undefined,
-    phone: searchParams.get("phone") ?? undefined
+    phone: searchParams.get("phone") ?? undefined,
+    page: searchParams.get("page"),
+    limit: searchParams.get("limit")
   });
 
-  return NextResponse.json({ ok: true, records });
+  return NextResponse.json({ ok: true, ...result });
 }

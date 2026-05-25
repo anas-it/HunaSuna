@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+export const preferredRegion = "fra1";
+export const runtime = "nodejs";
+
 export async function GET() {
   return NextResponse.json({
     ok: true,
@@ -13,4 +16,3 @@ export async function POST() {
     message: "Используйте /api/auth с полем action."
   });
 }
-

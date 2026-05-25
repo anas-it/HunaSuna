@@ -7,11 +7,14 @@ import {
   updateContact
 } from "@/server/services/contact.service";
 
+export const preferredRegion = "fra1";
+export const runtime = "nodejs";
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET(_request: NextRequest, context: RouteContext) {
+export async function GET(request: NextRequest, context: RouteContext) {
   const { user, response } = await requireApiUser();
 
   if (!user) {
@@ -20,7 +23,11 @@ export async function GET(_request: NextRequest, context: RouteContext) {
 
   try {
     const { id } = await context.params;
-    const data = await getContactHistory(user.id, id);
+    const searchParams = request.nextUrl.searchParams;
+    const data = await getContactHistory(user.id, id, {
+      page: searchParams.get("page"),
+      limit: searchParams.get("limit")
+    });
     return NextResponse.json({ ok: true, ...data });
   } catch (error) {
     return apiError(error, 404);
@@ -61,4 +68,3 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
     return apiError(error);
   }
 }
-

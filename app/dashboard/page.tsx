@@ -2,49 +2,13 @@ import Link from "next/link";
 import { PageShell } from "@/components/layout/page-shell";
 import { RecordList } from "@/components/records/record-list";
 import { Button } from "@/components/ui/button";
-import { prisma } from "@/server/db/prisma";
 import { requirePageUser } from "@/server/auth/session";
+import { getDashboardSummary } from "@/server/services/dashboard.service";
 
 export default async function DashboardPage() {
   const user = await requirePageUser();
-  const [contactsCount, recordsCount, deletedCount, latestRecords] = await Promise.all([
-    prisma.contact.count({
-      where: {
-        userId: user.id,
-        deletedAt: null
-      }
-    }),
-    prisma.record.count({
-      where: {
-        userId: user.id,
-        deletedAt: null,
-        archivedAt: null
-      }
-    }),
-    prisma.record.count({
-      where: {
-        userId: user.id,
-        deletedAt: {
-          not: null
-        },
-        restoreUntil: {
-          gt: new Date()
-        },
-        archivedAt: null
-      }
-    }),
-    prisma.record.findMany({
-      where: {
-        userId: user.id,
-        deletedAt: null,
-        archivedAt: null
-      },
-      orderBy: {
-        createdAt: "desc"
-      },
-      take: 5
-    })
-  ]);
+  const { contactsCount, deletedCount, latestRecords, recordsCount } =
+    await getDashboardSummary(user.id);
 
   return (
     <PageShell

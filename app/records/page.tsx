@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Notice } from "@/components/layout/notice";
+import { PaginationNav } from "@/components/layout/pagination-nav";
 import { PageShell } from "@/components/layout/page-shell";
 import { RecordList } from "@/components/records/record-list";
 import { Button } from "@/components/ui/button";
 import { requirePageUser } from "@/server/auth/session";
 import { listContacts } from "@/server/services/contact.service";
-import { listRecords } from "@/server/services/record.service";
+import { listRecordsPage } from "@/server/services/record.service";
 
 type RecordsPageProps = {
   searchParams: Promise<{
@@ -13,24 +14,28 @@ type RecordsPageProps = {
     query?: string;
     contactId?: string;
     phone?: string;
+    page?: string;
+    message?: string;
   }>;
 };
 
 export default async function RecordsPage({ searchParams }: RecordsPageProps) {
   const user = await requirePageUser();
   const params = await searchParams;
-  const [contacts, records] = await Promise.all([
+  const [contacts, result] = await Promise.all([
     listContacts(user.id),
-    listRecords(user.id, {
+    listRecordsPage(user.id, {
       query: params.query,
       contactId: params.contactId,
-      phone: params.phone
+      phone: params.phone,
+      page: params.page
     })
   ]);
+  const { pagination, records } = result;
 
   return (
     <PageShell title="Записи">
-      <Notice error={params.error} />
+      <Notice error={params.error} message={params.message} />
 
       <div className="mb-5 flex justify-end">
         <Button asChild>
@@ -67,6 +72,7 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
       </form>
 
       <RecordList records={records} />
+      <PaginationNav basePath="/records" pagination={pagination} params={params} />
     </PageShell>
   );
 }
