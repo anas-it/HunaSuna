@@ -18,7 +18,10 @@ export default async function VerifyPhonePage({ searchParams }: VerifyPhonePageP
 
   const params = await searchParams;
   const cookieStore = await cookies();
-  const developmentCode = cookieStore.get("hunasuna_dev_sms_code")?.value;
+  const developmentCode =
+    process.env.NODE_ENV === "development"
+      ? cookieStore.get("hunasuna_dev_sms_code")?.value
+      : undefined;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-6">
@@ -55,4 +58,3 @@ export default async function VerifyPhonePage({ searchParams }: VerifyPhonePageP
     </main>
   );
 }
-

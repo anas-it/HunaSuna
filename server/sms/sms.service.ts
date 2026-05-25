@@ -5,6 +5,7 @@ export type SendSmsCodeInput = {
 };
 
 export async function sendSmsCode(input: SendSmsCodeInput) {
+  const isDevelopment = process.env.NODE_ENV === "development";
   const hasTwilio =
     Boolean(process.env.TWILIO_ACCOUNT_SID) &&
     Boolean(process.env.TWILIO_AUTH_TOKEN) &&
@@ -13,7 +14,7 @@ export async function sendSmsCode(input: SendSmsCodeInput) {
   if (!hasTwilio) {
     return {
       delivered: false,
-      developmentCode: input.code
+      developmentCode: isDevelopment ? input.code : undefined
     };
   }
 

@@ -37,6 +37,7 @@ import {
 
 const DEV_SMS_COOKIE = "hunasuna_dev_sms_code";
 const DEV_RECOVERY_COOKIE = "hunasuna_dev_recovery_code";
+const IS_DEVELOPMENT = process.env.NODE_ENV === "development";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -62,7 +63,7 @@ function withError(path: string, error: unknown) {
 async function storeDevelopmentCode(code?: string) {
   const cookieStore = await cookies();
 
-  if (!code) {
+  if (!IS_DEVELOPMENT || !code) {
     cookieStore.set(DEV_SMS_COOKIE, "", {
       httpOnly: true,
       sameSite: "lax",
@@ -85,7 +86,7 @@ async function storeDevelopmentCode(code?: string) {
 async function storeRecoveryCode(code?: string) {
   const cookieStore = await cookies();
 
-  if (!code) {
+  if (!IS_DEVELOPMENT || !code) {
     cookieStore.set(DEV_RECOVERY_COOKIE, "", {
       httpOnly: true,
       sameSite: "lax",

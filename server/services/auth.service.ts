@@ -408,7 +408,7 @@ export async function requestPasswordRecovery(targetInput: string, meta?: Reques
   });
 
   return {
-    developmentCode: code
+    developmentCode: process.env.NODE_ENV === "development" ? code : undefined
   };
 }
 

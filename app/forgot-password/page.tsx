@@ -14,7 +14,10 @@ export default async function ForgotPasswordPage({ searchParams }: ForgotPasswor
 
   const params = await searchParams;
   const cookieStore = await cookies();
-  const developmentCode = cookieStore.get("hunasuna_dev_recovery_code")?.value;
+  const developmentCode =
+    process.env.NODE_ENV === "development"
+      ? cookieStore.get("hunasuna_dev_recovery_code")?.value
+      : undefined;
   const isResetStep = params.step === "reset";
 
   return (
