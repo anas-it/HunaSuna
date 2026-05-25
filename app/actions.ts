@@ -57,7 +57,9 @@ function errorMessage(error: unknown) {
 }
 
 function withError(path: string, error: unknown) {
-  return `${path}?error=${encodeURIComponent(errorMessage(error))}`;
+  const separator = path.includes("?") ? "&" : "?";
+
+  return `${path}${separator}error=${encodeURIComponent(errorMessage(error))}`;
 }
 
 async function storeDevelopmentCode(code?: string) {
