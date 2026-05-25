@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { ZodError, type ZodIssue } from "zod";
 import { getRequestMeta } from "@/server/auth/request";
 import {
   createSession,
@@ -44,7 +45,108 @@ function checked(formData: FormData, key: string) {
   return formData.get(key) === "on";
 }
 
+const validationFieldLabels: Record<string, string> = {
+  amount: "Сумма",
+  confirmPassword: "Подтверждение пароля",
+  contactId: "Контакт",
+  currency: "Валюта",
+  currentEmail: "Текущий email",
+  currentPassword: "Текущий пароль",
+  email: "Email",
+  firstName: "Имя",
+  lastName: "Фамилия",
+  login: "Логин",
+  newEmail: "Новый email",
+  newPassword: "Новый пароль",
+  password: "Пароль",
+  phone: "Телефон",
+  rate: "Курс",
+  "receiver.firstName": "Имя получателя",
+  "receiver.lastName": "Фамилия получателя",
+  "receiver.phone": "Телефон получателя",
+  "sender.firstName": "Имя отправителя",
+  "sender.lastName": "Фамилия отправителя",
+  "sender.phone": "Телефон отправителя",
+  secretAnswer: "Секретный ответ",
+  secretQuestion: "Секретный вопрос",
+  target: "Логин",
+  whatsapp: "WhatsApp"
+};
+
+function charWord(count: number) {
+  const lastDigit = count % 10;
+  const lastTwoDigits = count % 100;
+
+  if (lastDigit === 1 && lastTwoDigits !== 11) {
+    return "символ";
+  }
+
+  if ([2, 3, 4].includes(lastDigit) && ![12, 13, 14].includes(lastTwoDigits)) {
+    return "символа";
+  }
+
+  return "символов";
+}
+
+function validationFieldLabel(issue: ZodIssue) {
+  const path = issue.path.join(".");
+  const lastPathItem = issue.path[issue.path.length - 1];
+
+  return (
+    validationFieldLabels[path] ??
+    validationFieldLabels[String(lastPathItem ?? "")] ??
+    "Поле"
+  );
+}
+
+function validationIssueMessage(issue: ZodIssue) {
+  const label = validationFieldLabel(issue);
+
+  if (issue.code === "custom" && issue.message) {
+    return issue.message;
+  }
+
+  if (issue.code === "too_small") {
+    const minimum = "minimum" in issue ? issue.minimum : undefined;
+
+    if (typeof minimum === "number") {
+      if (minimum <= 1) {
+        return `${label}: заполните поле`;
+      }
+
+      return `${label}: минимум ${minimum} ${charWord(minimum)}`;
+    }
+
+    return `${label}: значение слишком короткое`;
+  }
+
+  if (issue.code === "invalid_format") {
+    return `${label}: неверный формат`;
+  }
+
+  if (issue.code === "invalid_type") {
+    return `${label}: укажите значение`;
+  }
+
+  if (issue.code === "invalid_value") {
+    return `${label}: выберите значение из списка`;
+  }
+
+  return `${label}: проверьте значение`;
+}
+
+function validationErrorMessage(error: ZodError) {
+  const messages = error.issues.map(validationIssueMessage);
+  const uniqueMessages = Array.from(new Set(messages));
+
+  return uniqueMessages.join("\n");
+}
+
 function errorMessage(error: unknown) {
+  if (error instanceof ZodError) {
+    return validationErrorMessage(error);
+  }
+
   return error instanceof Error ? error.message : "Что-то пошло не так";
 }
 
