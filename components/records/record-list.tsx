@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { ArrowDown, ArrowUp, ArrowUpDown, X } from "lucide-react";
 import { formatDateTime, formatPerson } from "@/lib/format";
 
@@ -111,6 +112,8 @@ function RecordCell({ children, className, record, onOpen }: RecordCellProps) {
 }
 
 export function RecordList({ records, showEditAction = true }: RecordListProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [selectedRecord, setSelectedRecord] = useState<RecordItem | null>(null);
   const [sortState, setSortState] = useState<SortState>(null);
   const columnsClass = showEditAction
@@ -143,6 +146,11 @@ export function RecordList({ records, showEditAction = true }: RecordListProps) 
       })
       .map(({ record }) => record);
   }, [records, sortState]);
+  const returnTo = useMemo(() => {
+    const params = searchParams.toString();
+
+    return params ? `${pathname}?${params}` : pathname;
+  }, [pathname, searchParams]);
 
   function openRecord(record: RecordItem) {
     setSelectedRecord(record);
@@ -245,7 +253,7 @@ export function RecordList({ records, showEditAction = true }: RecordListProps) 
                   <div className="border-l border-[#e5eaf1] px-3 py-4">
                     <Link
                       className="inline-flex h-9 items-center justify-center rounded-md border border-[#d8dee8] bg-white px-3 text-sm font-medium text-[#256f6c] transition-colors hover:bg-[#eef2f6]"
-                      href={`/records/${record.id}`}
+                      href={`/records/${record.id}?returnTo=${encodeURIComponent(returnTo)}`}
                     >
                       Редактировать
                     </Link>

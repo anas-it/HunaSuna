@@ -10,7 +10,7 @@ import { getRecord } from "@/server/services/record.service";
 
 type RecordPageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; message?: string; returnTo?: string }>;
 };
 
 export default async function RecordPage({ params, searchParams }: RecordPageProps) {
@@ -27,7 +27,7 @@ export default async function RecordPage({ params, searchParams }: RecordPagePro
       title="Запись"
       description={`Создана: ${formatDateTime(record.createdAt)}. Часовой пояс: ${record.timezone}.`}
     >
-      <Notice error={query.error} />
+      <Notice error={query.error} message={query.message} />
 
       {record.deletedAt ? (
         <div className="rounded-lg border border-[#d8dee8] bg-white p-6 text-sm text-[#64748b]">
@@ -37,7 +37,12 @@ export default async function RecordPage({ params, searchParams }: RecordPagePro
         <>
           <RecordForm
             action={updateRecordAction.bind(null, record.id)}
-            actions={<RecordActions deleteAction={deleteRecordAction.bind(null, record.id)} />}
+            actions={
+              <RecordActions
+                deleteAction={deleteRecordAction.bind(null, record.id)}
+                returnTo={query.returnTo}
+              />
+            }
             contacts={contacts}
             record={record}
             submitLabel="Сохранить изменения"

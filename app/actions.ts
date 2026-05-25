@@ -60,6 +60,20 @@ function withMessage(path: string, message: string) {
   return `${path}${separator}message=${encodeURIComponent(message)}`;
 }
 
+function safeReturnPath(value: FormDataEntryValue | null, fallback: string) {
+  if (typeof value !== "string") {
+    return fallback;
+  }
+
+  const path = value.trim();
+
+  if (!path.startsWith("/") || path.startsWith("//") || path.includes("://")) {
+    return fallback;
+  }
+
+  return path;
+}
+
 function personFromForm(formData: FormData, prefix: "sender" | "receiver") {
   const contactId = optionalText(formData, `${prefix}ContactId`);
 
@@ -262,11 +276,19 @@ export async function updateRecordAction(recordId: string, formData: FormData) {
   redirect(nextPath);
 }
 
-export async function deleteRecordAction(recordId: string) {
-  const user = await requirePageUser();
-  const meta = await getRequestMeta();
-  await deleteRecord(user.id, recordId, meta);
-  redirect("/deleted");
+export async function deleteRecordAction(recordId: string, formData: FormData) {
+  const returnTo = safeReturnPath(formData.get("returnTo"), "/records");
+  let nextPath = withMessage(returnTo, "Запись удалена");
+
+  try {
+    const user = await requirePageUser();
+    const meta = await getRequestMeta();
+    await deleteRecord(user.id, recordId, meta);
+  } catch (error) {
+    nextPath = withError(returnTo, error);
+  }
+
+  redirect(nextPath);
 }
 
 export async function restoreRecordAction(recordId: string) {

@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 
 type RecordActionsProps = {
   deleteAction: (formData: FormData) => void | Promise<void>;
+  returnTo?: string;
 };
 
-export function RecordActions({ deleteAction }: RecordActionsProps) {
+export function RecordActions({ deleteAction, returnTo = "/records" }: RecordActionsProps) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   return (
@@ -37,6 +38,7 @@ export function RecordActions({ deleteAction }: RecordActionsProps) {
                 Нет
               </Button>
               <form action={deleteAction}>
+                <input name="returnTo" type="hidden" value={returnTo} />
                 <Button variant="destructive">Да, удалить</Button>
               </form>
             </div>
