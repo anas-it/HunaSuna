@@ -35,7 +35,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <input
             className="rounded-md border border-[#cbd5e1] px-3 py-2"
             name="login"
-            placeholder="Логин, телефон или email"
+            placeholder="Логин"
             required
           />
           <input

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 type SensitiveData = {
   email: string | null;
-  phone: string;
+  phone: string | null;
 };
 
 type RevealSensitiveDataResult =
@@ -21,7 +21,6 @@ type RevealSensitiveDataResult =
 
 type SettingsPanelProps = {
   hasEmail: boolean;
-  phoneVerified: boolean;
   revealSensitiveDataAction: (formData: FormData) => Promise<RevealSensitiveDataResult>;
   updateEmailAction: (formData: FormData) => void | Promise<void>;
   updatePasswordAction: (formData: FormData) => void | Promise<void>;
@@ -76,7 +75,6 @@ function SensitiveField({
 
 export function SettingsPanel({
   hasEmail,
-  phoneVerified,
   revealSensitiveDataAction,
   updateEmailAction,
   updatePasswordAction,
@@ -157,9 +155,6 @@ export function SettingsPanel({
               value={sensitiveData?.phone ?? null}
               visible={sensitiveVisible}
             />
-          </div>
-          <div className="text-sm text-[#64748b]">
-            Номер подтвержден: {phoneVerified ? "да" : "нет"}
           </div>
           <div className="flex justify-end">
             <Button>Сохранить изменения</Button>

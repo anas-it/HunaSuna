@@ -3,7 +3,6 @@ import {
   LOGIN_BLOCK_MINUTES,
   MAX_FAILED_LOGIN_ATTEMPTS,
   MAX_SMS_PER_WINDOW,
-  PASSWORD_RECOVERY_CODE_TTL_MINUTES,
   SMS_CODE_TTL_MINUTES,
   SMS_WINDOW_MINUTES
 } from "@/lib/constants";
@@ -12,11 +11,7 @@ import { normalizePhone } from "@/lib/phone";
 import { createNumericCode, hashCode, verifyCode } from "@/server/auth/code";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { writeSecurityLog } from "@/server/logs/security-log.service";
-import {
-  isSmsProviderConfigured,
-  sendSmsCode,
-  verifySmsCode
-} from "@/server/sms/sms.service";
+import { sendSmsCode } from "@/server/sms/sms.service";
 import {
   loginSchema,
   passwordRecoverySchema,
@@ -32,8 +27,9 @@ type RequestMeta = {
 type RegisterInput = {
   login: string;
   password: string;
-  phone: string;
-  email?: string;
+  confirmPassword: string;
+  secretQuestion: string;
+  secretAnswer: string;
 };
 
 type LoginInput = {
@@ -42,17 +38,16 @@ type LoginInput = {
 };
 
 function loginTarget(value: string) {
-  const target = value.trim().toLowerCase();
+  return value.trim().toLowerCase();
+}
 
-  if (target.includes("@")) {
-    return target;
-  }
-
-  return normalizePhone(target);
+function normalizeSecretAnswer(answer: string) {
+  return answer.trim().toLowerCase();
 }
 
 async function findUserForLogin(value: string) {
   const target = value.trim();
+  const normalizedPhone = normalizePhone(target);
 
   return prisma.user.findFirst({
     where: {
@@ -61,7 +56,7 @@ async function findUserForLogin(value: string) {
           login: target
         },
         {
-          phone: normalizePhone(target)
+          phone: normalizedPhone
         },
         {
           email: target
@@ -97,7 +92,9 @@ async function assertLoginAllowed(target: string, ipAddress?: string) {
   });
 
   if (failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
-    throw new Error("Слишком много неправильных попыток. Попробуйте через 30 минут.");
+    throw new Error(
+      "Слишком много неправильных попыток. Попробуйте через 30 минут."
+    );
   }
 }
 
@@ -110,6 +107,10 @@ export async function requestPhoneVerification(userId: string, meta?: RequestMet
 
   if (!user) {
     throw new Error("Пользователь не найден");
+  }
+
+  if (!user.phone) {
+    throw new Error("Мобильный номер не указан");
   }
 
   const since = addMinutes(new Date(), -SMS_WINDOW_MINUTES);
@@ -177,49 +178,40 @@ export async function requestPhoneVerification(userId: string, meta?: RequestMet
 export async function registerUser(input: RegisterInput, meta?: RequestMeta) {
   const data = registerSchema.parse({
     ...input,
-    login: input.login.trim(),
-    phone: normalizePhone(input.phone)
+    login: input.login.trim()
   });
 
-  const existingUser = await prisma.user.findFirst({
+  const existingUser = await prisma.user.findUnique({
     where: {
-      OR: [
-        {
-          login: data.login
-        },
-        {
-          phone: data.phone
-        },
-        ...(data.email
-          ? [
-              {
-                email: data.email
-              }
-            ]
-          : [])
-      ]
+      login: data.login
     }
   });
 
   if (existingUser) {
-    throw new Error("Пользователь с такими данными уже существует");
+    throw new Error("Пользователь с таким логином уже существует");
   }
 
   const user = await prisma.user.create({
     data: {
       login: data.login,
       passwordHash: hashPassword(data.password),
-      phone: data.phone,
-      email: data.email,
-      emailUsableForRecovery: Boolean(data.email)
+      phone: null,
+      phoneVerified: true,
+      email: null,
+      emailUsableForRecovery: false,
+      secretQuestion: data.secretQuestion.trim(),
+      secretAnswerHash: hashPassword(normalizeSecretAnswer(data.secretAnswer))
     }
   });
 
-  const sms = await requestPhoneVerification(user.id, meta);
+  await writeSecurityLog({
+    action: "register",
+    userId: user.id,
+    ipAddress: meta?.ipAddress
+  });
 
   return {
-    user,
-    sms
+    user
   };
 }
 
@@ -276,17 +268,16 @@ export async function loginUser(input: LoginInput, meta?: RequestMeta) {
     ipAddress: meta?.ipAddress
   });
 
-  const sms = user.phoneVerified
-    ? undefined
-    : await requestPhoneVerification(user.id, meta);
-
   return {
-    user,
-    sms
+    user
   };
 }
 
-export async function verifyPhone(userId: string, input: { phone: string; code: string }, meta?: RequestMeta) {
+export async function verifyPhone(
+  userId: string,
+  input: { phone: string; code: string },
+  meta?: RequestMeta
+) {
   const data = smsCodeSchema.parse(input);
   const phone = normalizePhone(data.phone);
 
@@ -305,14 +296,7 @@ export async function verifyPhone(userId: string, input: { phone: string; code: 
     }
   });
 
-  const isValidCode = isSmsProviderConfigured()
-    ? await verifySmsCode({
-        phone,
-        code: data.code
-      })
-    : Boolean(code && verifyCode(data.code, code.codeHash));
-
-  if (!code || !isValidCode) {
+  if (!code || !verifyCode(data.code, code.codeHash)) {
     if (code) {
       await prisma.smsCode.update({
         where: {
@@ -355,161 +339,78 @@ export async function verifyPhone(userId: string, input: { phone: string; code: 
   });
 }
 
-export async function requestPasswordRecovery(targetInput: string, meta?: RequestMeta) {
+export async function requestPasswordRecovery(
+  targetInput: string,
+  meta?: RequestMeta
+) {
   const target = targetInput.trim();
 
   if (!target) {
-    throw new Error("Укажите телефон, email или логин");
+    throw new Error("Укажите логин");
   }
 
-  const user = await prisma.user.findFirst({
+  const user = await prisma.user.findUnique({
     where: {
-      OR: [
-        {
-          login: target
-        },
-        {
-          phone: normalizePhone(target)
-        },
-        {
-          email: target
-        }
-      ]
+      login: target
     }
   });
 
   if (!user) {
-    throw new Error("Если аккаунт найден, код восстановления будет создан");
+    throw new Error("Аккаунт с таким логином не найден");
   }
 
-  const isEmailTarget = user.email === target;
-
-  if (isEmailTarget && !user.emailUsableForRecovery) {
-    throw new Error("Этот email нельзя использовать для восстановления");
+  if (!user.secretQuestion || !user.secretAnswerHash) {
+    throw new Error("Для этого аккаунта не настроен секретный вопрос");
   }
-
-  const code = createNumericCode();
-  const channel = isEmailTarget ? "email" : "sms";
-
-  await prisma.passwordRecoveryCode.create({
-    data: {
-      userId: user.id,
-      channel,
-      target,
-      codeHash: hashCode(code),
-      expiresAt: addMinutes(new Date(), PASSWORD_RECOVERY_CODE_TTL_MINUTES)
-    }
-  });
-
-  const smsResult =
-    channel === "sms"
-      ? await sendSmsCode({
-          phone: user.phone,
-          code,
-          purpose: "password_recovery"
-        })
-      : undefined;
 
   await writeSecurityLog({
     action: "password_recovery",
     userId: user.id,
     ipAddress: meta?.ipAddress,
     metadata: {
-      channel
+      channel: "secret_question"
     }
   });
 
   return {
-    developmentCode:
-      smsResult?.developmentCode ??
-      (channel === "email" && process.env.NODE_ENV === "development"
-        ? code
-        : undefined)
+    secretQuestion: user.secretQuestion
   };
 }
 
 export async function resetPassword(input: {
   target: string;
-  code: string;
+  secretAnswer: string;
   newPassword: string;
+  confirmPassword: string;
 }) {
   const data = passwordRecoverySchema.parse(input);
   const target = data.target.trim();
 
-  const recoveryCode = await prisma.passwordRecoveryCode.findFirst({
+  const user = await prisma.user.findUnique({
     where: {
-      target,
-      consumedAt: null,
-      expiresAt: {
-        gt: new Date()
-      }
-    },
-    orderBy: {
-      createdAt: "desc"
+      login: target
     }
   });
 
-  if (!recoveryCode || recoveryCode.attempts >= 3) {
-    throw new Error("Код восстановления недействителен");
+  if (!user || !user.secretAnswerHash) {
+    throw new Error("Аккаунт не найден или секретный вопрос не настроен");
   }
 
-  const recoverySmsUser =
-    recoveryCode.userId &&
-    recoveryCode.channel === "sms" &&
-    isSmsProviderConfigured()
-      ? await prisma.user.findUnique({
-          where: {
-            id: recoveryCode.userId
-          },
-          select: {
-            phone: true
-          }
-        })
-      : undefined;
-
-  const isVerifiedBySms = recoverySmsUser
-    ? await verifySmsCode({
-        phone: recoverySmsUser.phone,
-        code: data.code
-      })
-    : false;
-
-  const isValidRecoveryCode = recoverySmsUser
-    ? isVerifiedBySms
-    : verifyCode(data.code, recoveryCode.codeHash);
-
-  if (!isValidRecoveryCode) {
-    await prisma.passwordRecoveryCode.update({
-      where: {
-        id: recoveryCode.id
-      },
-      data: {
-        attempts: {
-          increment: 1
-        }
+  if (
+    !verifyPassword(
+      normalizeSecretAnswer(data.secretAnswer),
+      user.secretAnswerHash
+    )
+  ) {
+    await writeSecurityLog({
+      action: "password_recovery_failed",
+      userId: user.id,
+      metadata: {
+        reason: "secret_answer"
       }
     });
 
-    throw new Error("Неверный код восстановления");
-  }
-
-  if (!recoveryCode.userId) {
-    throw new Error("Аккаунт не найден");
-  }
-
-  const user = await prisma.user.findUnique({
-    where: {
-      id: recoveryCode.userId
-    },
-    select: {
-      login: true,
-      phone: true,
-      email: true
-    }
-  });
-
-  if (!user) {
-    throw new Error("Аккаунт не найден");
+    throw new Error("Неверный секретный ответ");
   }
 
   const loginAttemptTargets = Array.from(
@@ -521,17 +422,9 @@ export async function resetPassword(input: {
   );
 
   await prisma.$transaction([
-    prisma.passwordRecoveryCode.update({
-      where: {
-        id: recoveryCode.id
-      },
-      data: {
-        consumedAt: new Date()
-      }
-    }),
     prisma.user.update({
       where: {
-        id: recoveryCode.userId
+        id: user.id
       },
       data: {
         passwordHash: hashPassword(data.newPassword)
@@ -542,7 +435,7 @@ export async function resetPassword(input: {
         success: false,
         OR: [
           {
-            userId: recoveryCode.userId
+            userId: user.id
           },
           {
             target: {
@@ -553,4 +446,9 @@ export async function resetPassword(input: {
       }
     })
   ]);
+
+  await writeSecurityLog({
+    action: "password_reset",
+    userId: user.id
+  });
 }

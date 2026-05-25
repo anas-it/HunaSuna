@@ -10,9 +10,11 @@ model User {
   id                        String                 @id @default(cuid())
   login                     String                 @unique
   passwordHash              String
+  secretQuestion            String?
+  secretAnswerHash          String?
   firstName                 String?
   lastName                  String?
-  phone                     String                 @unique
+  phone                     String?                @unique
   phoneVerified             Boolean                @default(false)
   email                     String?                @unique
   emailUsableForRecovery    Boolean                @default(false)

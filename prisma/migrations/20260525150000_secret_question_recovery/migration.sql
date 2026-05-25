@@ -1,0 +1,3 @@
+ALTER TABLE "User" ADD COLUMN "secretQuestion" TEXT;
+ALTER TABLE "User" ADD COLUMN "secretAnswerHash" TEXT;
+ALTER TABLE "User" ALTER COLUMN "phone" DROP NOT NULL;

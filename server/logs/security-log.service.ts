@@ -3,9 +3,12 @@ import { prisma } from "@/server/db/prisma";
 export type SecurityLogAction =
   | "login"
   | "login_failed"
+  | "register"
   | "phone_verified"
   | "phone_verification_sent"
   | "password_recovery"
+  | "password_recovery_failed"
+  | "password_reset"
   | "contact_created"
   | "contact_updated"
   | "contact_deleted"

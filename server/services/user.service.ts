@@ -48,11 +48,16 @@ export async function updateUserProfile(
     throw new Error("Пользователь не найден");
   }
 
-  const nextPhone = data.phone ? normalizePhone(data.phone) : currentUser.phone;
+  const nextPhone =
+    data.phone !== undefined
+      ? data.phone
+        ? normalizePhone(data.phone)
+        : null
+      : currentUser.phone;
   const phoneChanged = nextPhone !== currentUser.phone;
   const emailChanged = data.email !== undefined && data.email !== currentUser.email;
 
-  if (phoneChanged) {
+  if (phoneChanged && nextPhone) {
     const existingPhone = await prisma.user.findUnique({
       where: {
         phone: nextPhone
@@ -84,7 +89,7 @@ export async function updateUserProfile(
       firstName: data.firstName?.trim() || null,
       lastName: data.lastName?.trim() || null,
       phone: nextPhone,
-      phoneVerified: phoneChanged ? false : currentUser.phoneVerified,
+      phoneVerified: Boolean(nextPhone),
       ...(data.email !== undefined
         ? {
             email: data.email ?? null,

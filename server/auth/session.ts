@@ -13,7 +13,7 @@ export type CurrentUser = {
   login: string;
   firstName: string | null;
   lastName: string | null;
-  phone: string;
+  phone: string | null;
   phoneVerified: boolean;
   email: string | null;
   emailUsableForRecovery: boolean;
@@ -106,10 +106,6 @@ export async function requirePageUser() {
     redirect(`/login?error=${encodeURIComponent("Войдите в аккаунт")}`);
   }
 
-  if (!user.phoneVerified) {
-    redirect("/verify-phone");
-  }
-
   return user;
 }
 
@@ -128,10 +124,6 @@ export async function redirectAuthenticatedUser() {
 
   if (!user) {
     return;
-  }
-
-  if (!user.phoneVerified) {
-    redirect("/verify-phone");
   }
 
   redirect("/dashboard");

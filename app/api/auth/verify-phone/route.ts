@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     await verifyPhone(
       user.id,
       {
-        phone: user.phone,
+        phone: user.phone ?? "",
         code: body.code
       },
       meta
@@ -33,4 +33,3 @@ export async function POST(request: NextRequest) {
     return apiError(error);
   }
 }
-

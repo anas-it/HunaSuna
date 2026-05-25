@@ -28,7 +28,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       <Notice error={params.error} />
       <SettingsPanel
         hasEmail={Boolean(user.email)}
-        phoneVerified={user.phoneVerified}
         revealSensitiveDataAction={revealSensitiveSettingsAction}
         updateEmailAction={updateEmailAction}
         updatePasswordAction={updatePasswordAction}

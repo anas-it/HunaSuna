@@ -14,7 +14,7 @@ type ApiUser = {
   login: string;
   firstName: string | null;
   lastName: string | null;
-  phone: string;
+  phone: string | null;
   phoneVerified: boolean;
   email: string | null;
 };
@@ -72,8 +72,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === "request-password-recovery") {
-      await requestPasswordRecovery(body.target, meta);
-      return NextResponse.json({ ok: true });
+      const result = await requestPasswordRecovery(body.target, meta);
+      return NextResponse.json({ ok: true, secretQuestion: result.secretQuestion });
     }
 
     if (action === "reset-password") {

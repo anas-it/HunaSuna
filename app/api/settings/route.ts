@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestMeta } from "@/server/auth/request";
 import { apiError, requireApiUser } from "@/server/auth/api";
-import { requestPhoneVerification } from "@/server/services/auth.service";
 import { updateUserProfile } from "@/server/services/user.service";
 
 function publicUser(user: {
@@ -9,7 +8,7 @@ function publicUser(user: {
   login: string;
   firstName: string | null;
   lastName: string | null;
-  phone: string;
+  phone: string | null;
   phoneVerified: boolean;
   email: string | null;
 }) {
@@ -35,10 +34,6 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const meta = await getRequestMeta();
     const result = await updateUserProfile(user.id, body, meta);
-
-    if (result.phoneChanged) {
-      await requestPhoneVerification(user.id, meta);
-    }
 
     return NextResponse.json({
       ok: true,

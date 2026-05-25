@@ -120,7 +120,7 @@ function personFromForm(formData: FormData, prefix: "sender" | "receiver") {
 }
 
 export async function registerAction(formData: FormData) {
-  let nextPath = "/verify-phone";
+  let nextPath = "/dashboard";
 
   try {
     const meta = await getRequestMeta();
@@ -128,14 +128,14 @@ export async function registerAction(formData: FormData) {
       {
         login: text(formData, "login"),
         password: text(formData, "password"),
-        phone: text(formData, "phone"),
-        email: optionalText(formData, "email")
+        confirmPassword: text(formData, "confirmPassword"),
+        secretQuestion: text(formData, "secretQuestion"),
+        secretAnswer: text(formData, "secretAnswer")
       },
       meta
     );
 
     await createSession(result.user.id, meta);
-    await storeDevelopmentCode(result.sms.developmentCode);
   } catch (error) {
     nextPath = withError("/register", error);
   }
@@ -159,11 +159,6 @@ export async function loginAction(formData: FormData) {
     await createSession(result.user.id, meta, {
       remember: checked(formData, "remember")
     });
-
-    if (!result.user.phoneVerified) {
-      await storeDevelopmentCode(result.sms?.developmentCode);
-      nextPath = "/verify-phone";
-    }
   } catch (error) {
     nextPath = withError("/login", error);
   }
@@ -181,7 +176,7 @@ export async function verifyPhoneAction(formData: FormData) {
     await verifyPhone(
       user.id,
       {
-        phone: user.phone,
+        phone: user.phone ?? "",
         code: text(formData, "code")
       },
       meta
@@ -220,8 +215,8 @@ export async function requestPasswordRecoveryAction(formData: FormData) {
   try {
     const meta = await getRequestMeta();
     const result = await requestPasswordRecovery(text(formData, "target"), meta);
-    await storeRecoveryCode(result.developmentCode);
-    nextPath = `/forgot-password?step=reset&target=${encodeURIComponent(text(formData, "target"))}`;
+    await storeRecoveryCode();
+    nextPath = `/forgot-password?step=reset&target=${encodeURIComponent(text(formData, "target"))}&question=${encodeURIComponent(result.secretQuestion)}`;
   } catch (error) {
     await storeRecoveryCode();
     nextPath = withError("/forgot-password", error);
@@ -236,13 +231,14 @@ export async function resetPasswordAction(formData: FormData) {
   try {
     await resetPassword({
       target: text(formData, "target"),
-      code: text(formData, "code"),
-      newPassword: text(formData, "newPassword")
+      secretAnswer: text(formData, "secretAnswer"),
+      newPassword: text(formData, "newPassword"),
+      confirmPassword: text(formData, "confirmPassword")
     });
     await storeRecoveryCode();
   } catch (error) {
     nextPath = withError(
-      `/forgot-password?step=reset&target=${encodeURIComponent(text(formData, "target"))}`,
+      `/forgot-password?step=reset&target=${encodeURIComponent(text(formData, "target"))}&question=${encodeURIComponent(text(formData, "secretQuestion"))}`,
       error
     );
   }
@@ -387,11 +383,7 @@ export async function updateSettingsAction(formData: FormData) {
       meta
     );
 
-    if (result.phoneChanged) {
-      const sms = await requestPhoneVerification(user.id, meta);
-      await storeDevelopmentCode(sms.developmentCode);
-      nextPath = "/verify-phone";
-    }
+    void result;
   } catch (error) {
     nextPath = withError("/settings", error);
   }

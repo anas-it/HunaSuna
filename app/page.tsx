@@ -5,8 +5,8 @@ import { getCurrentUser } from "@/server/auth/session";
 
 export default async function HomePage() {
   const user = await getCurrentUser();
-  const primaryHref = user?.phoneVerified ? "/dashboard" : "/login";
-  const primaryLabel = user?.phoneVerified ? "Открыть кабинет" : "Войти";
+  const primaryHref = user ? "/dashboard" : "/login";
+  const primaryLabel = user ? "Открыть кабинет" : "Войти";
 
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#eef2f1] px-6 py-8 text-[#1f2937]">

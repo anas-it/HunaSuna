@@ -9,7 +9,11 @@ export const settingsSchema = z.object({
     .email()
     .optional()
     .or(z.literal("").transform(() => undefined)),
-  phone: z.string().min(4).optional(),
+  phone: z
+    .string()
+    .min(4)
+    .optional()
+    .or(z.literal("").transform(() => undefined)),
   newPassword: z
     .string()
     .min(4)

@@ -40,15 +40,23 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           />
           <input
             className="rounded-md border border-[#cbd5e1] px-3 py-2"
-            name="phone"
-            placeholder="Мобильный номер с кодом страны"
+            minLength={4}
+            name="confirmPassword"
+            placeholder="Подтверждение пароля"
+            required
+            type="password"
+          />
+          <input
+            className="rounded-md border border-[#cbd5e1] px-3 py-2"
+            name="secretQuestion"
+            placeholder="Секретный вопрос"
             required
           />
           <input
             className="rounded-md border border-[#cbd5e1] px-3 py-2"
-            name="email"
-            placeholder="Email, если хотите"
-            type="email"
+            name="secretAnswer"
+            placeholder="Секретный ответ"
+            required
           />
           <Button>Зарегистрироваться</Button>
         </form>

@@ -17,19 +17,6 @@ export async function requireApiUser() {
     };
   }
 
-  if (!user.phoneVerified) {
-    return {
-      user: null,
-      response: NextResponse.json(
-        {
-          ok: false,
-          message: "Нужно подтвердить мобильный номер"
-        },
-        { status: 403 }
-      )
-    };
-  }
-
   return {
     user,
     response: null
@@ -45,4 +32,3 @@ export function apiError(error: unknown, status = 400) {
     { status }
   );
 }
-
