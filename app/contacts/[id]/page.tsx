@@ -1,4 +1,5 @@
 import { deleteContactAction, updateContactAction } from "@/app/actions";
+import { ContactActions } from "@/components/contacts/contact-actions";
 import { Notice } from "@/components/layout/notice";
 import { PageShell } from "@/components/layout/page-shell";
 import { RecordList } from "@/components/records/record-list";
@@ -18,15 +19,12 @@ export default async function ContactPage({ params, searchParams }: ContactPageP
   const { contact, records } = await getContactHistory(user.id, id);
 
   return (
-    <PageShell
-      title={`${contact.firstName} ${contact.lastName}`}
-      description="Карточка контакта и история записей, где этот контакт был выбран из списка."
-    >
+    <PageShell title={`${contact.firstName} ${contact.lastName}`}>
       <Notice error={query.error} />
 
       <form
         action={updateContactAction.bind(null, contact.id)}
-        className="mb-6 grid gap-3 rounded-lg border border-[#d8dee8] bg-white p-5 md:grid-cols-[1fr_1fr_1fr_auto]"
+        className="mb-6 grid gap-3 rounded-md border border-[#d8dee8] bg-white p-5 md:grid-cols-[1fr_1fr_1fr_1fr_auto]"
       >
         <input
           className="rounded-md border border-[#cbd5e1] px-3 py-2"
@@ -49,16 +47,21 @@ export default async function ContactPage({ params, searchParams }: ContactPageP
           placeholder="Телефон"
           required
         />
+        <input
+          className="rounded-md border border-[#cbd5e1] px-3 py-2"
+          defaultValue={contact.whatsapp ?? ""}
+          name="whatsapp"
+          placeholder="WhatsApp"
+        />
         <Button>Сохранить</Button>
       </form>
 
-      <form action={deleteContactAction.bind(null, contact.id)} className="mb-8">
-        <Button variant="secondary">Удалить контакт</Button>
-      </form>
+      <div className="mb-8 flex justify-end">
+        <ContactActions deleteAction={deleteContactAction.bind(null, contact.id)} />
+      </div>
 
       <h2 className="mb-3 text-xl font-semibold">История контакта</h2>
-      <RecordList records={records} />
+      <RecordList records={records} showEditAction={false} />
     </PageShell>
   );
 }
-

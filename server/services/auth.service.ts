@@ -38,7 +38,33 @@ type LoginInput = {
 };
 
 function loginTarget(value: string) {
-  return value.trim().toLowerCase();
+  const target = value.trim().toLowerCase();
+
+  if (target.includes("@")) {
+    return target;
+  }
+
+  return normalizePhone(target);
+}
+
+async function findUserForLogin(value: string) {
+  const target = value.trim();
+
+  return prisma.user.findFirst({
+    where: {
+      OR: [
+        {
+          login: target
+        },
+        {
+          phone: normalizePhone(target)
+        },
+        {
+          email: target
+        }
+      ]
+    }
+  });
 }
 
 async function recordLoginAttempt(input: {
@@ -202,11 +228,7 @@ export async function loginUser(input: LoginInput, meta?: RequestMeta) {
 
   await assertLoginAllowed(target, meta?.ipAddress);
 
-  const user = await prisma.user.findUnique({
-    where: {
-      login: data.login
-    }
-  });
+  const user = await findUserForLogin(data.login);
 
   if (!user || !verifyPassword(data.password, user.passwordHash)) {
     await recordLoginAttempt({
@@ -434,6 +456,29 @@ export async function resetPassword(input: {
     throw new Error("Аккаунт не найден");
   }
 
+  const user = await prisma.user.findUnique({
+    where: {
+      id: recoveryCode.userId
+    },
+    select: {
+      login: true,
+      phone: true,
+      email: true
+    }
+  });
+
+  if (!user) {
+    throw new Error("Аккаунт не найден");
+  }
+
+  const loginAttemptTargets = Array.from(
+    new Set(
+      [target, user.login, user.phone, user.email]
+        .filter((value): value is string => Boolean(value))
+        .map(loginTarget)
+    )
+  );
+
   await prisma.$transaction([
     prisma.passwordRecoveryCode.update({
       where: {
@@ -449,6 +494,21 @@ export async function resetPassword(input: {
       },
       data: {
         passwordHash: hashPassword(data.newPassword)
+      }
+    }),
+    prisma.loginAttempt.deleteMany({
+      where: {
+        success: false,
+        OR: [
+          {
+            userId: recoveryCode.userId
+          },
+          {
+            target: {
+              in: loginAttemptTargets
+            }
+          }
+        ]
       }
     })
   ]);

@@ -28,7 +28,12 @@ import {
   deleteRecord,
   updateRecord
 } from "@/server/services/record.service";
-import { updateUserProfile } from "@/server/services/user.service";
+import {
+  revealUserSensitiveData,
+  updateUserEmail,
+  updateUserPassword,
+  updateUserProfile
+} from "@/server/services/user.service";
 
 const DEV_SMS_COOKIE = "hunasuna_dev_sms_code";
 const DEV_RECOVERY_COOKIE = "hunasuna_dev_recovery_code";
@@ -40,6 +45,10 @@ function text(formData: FormData, key: string) {
 function optionalText(formData: FormData, key: string) {
   const value = text(formData, key);
   return value ? value : undefined;
+}
+
+function checked(formData: FormData, key: string) {
+  return formData.get(key) === "on";
 }
 
 function errorMessage(error: unknown) {
@@ -54,7 +63,13 @@ async function storeDevelopmentCode(code?: string) {
   const cookieStore = await cookies();
 
   if (!code) {
-    cookieStore.delete(DEV_SMS_COOKIE);
+    cookieStore.set(DEV_SMS_COOKIE, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 0,
+      path: "/verify-phone"
+    });
     return;
   }
 
@@ -71,7 +86,13 @@ async function storeRecoveryCode(code?: string) {
   const cookieStore = await cookies();
 
   if (!code) {
-    cookieStore.delete(DEV_RECOVERY_COOKIE);
+    cookieStore.set(DEV_RECOVERY_COOKIE, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 0,
+      path: "/forgot-password"
+    });
     return;
   }
 
@@ -132,7 +153,9 @@ export async function loginAction(formData: FormData) {
       meta
     );
 
-    await createSession(result.user.id, meta);
+    await createSession(result.user.id, meta, {
+      remember: checked(formData, "remember")
+    });
 
     if (!result.user.phoneVerified) {
       await storeDevelopmentCode(result.sms?.developmentCode);
@@ -197,6 +220,7 @@ export async function requestPasswordRecoveryAction(formData: FormData) {
     await storeRecoveryCode(result.developmentCode);
     nextPath = `/forgot-password?step=reset&target=${encodeURIComponent(text(formData, "target"))}`;
   } catch (error) {
+    await storeRecoveryCode();
     nextPath = withError("/forgot-password", error);
   }
 
@@ -234,7 +258,8 @@ export async function createContactAction(formData: FormData) {
       {
         firstName: text(formData, "firstName"),
         lastName: text(formData, "lastName"),
-        phone: text(formData, "phone")
+        phone: text(formData, "phone"),
+        whatsapp: optionalText(formData, "whatsapp")
       },
       meta
     );
@@ -257,7 +282,8 @@ export async function updateContactAction(contactId: string, formData: FormData)
       {
         firstName: text(formData, "firstName"),
         lastName: text(formData, "lastName"),
-        phone: text(formData, "phone")
+        phone: text(formData, "phone"),
+        whatsapp: optionalText(formData, "whatsapp")
       },
       meta
     );
@@ -301,7 +327,7 @@ export async function createRecordAction(formData: FormData) {
 }
 
 export async function updateRecordAction(recordId: string, formData: FormData) {
-  let nextPath = `/records/${recordId}`;
+  let nextPath = "/records";
 
   try {
     const user = await requirePageUser();
@@ -368,4 +394,68 @@ export async function updateSettingsAction(formData: FormData) {
   }
 
   redirect(nextPath);
+}
+
+export async function updatePasswordAction(formData: FormData) {
+  let nextPath = "/settings";
+
+  try {
+    const user = await requirePageUser();
+    const meta = await getRequestMeta();
+    await updateUserPassword(
+      user.id,
+      {
+        currentPassword: text(formData, "currentPassword"),
+        newPassword: text(formData, "newPassword")
+      },
+      meta
+    );
+  } catch (error) {
+    nextPath = withError("/settings", error);
+  }
+
+  redirect(nextPath);
+}
+
+export async function updateEmailAction(formData: FormData) {
+  let nextPath = "/settings";
+
+  try {
+    const user = await requirePageUser();
+    const meta = await getRequestMeta();
+    await updateUserEmail(
+      user.id,
+      {
+        currentEmail: optionalText(formData, "currentEmail"),
+        newEmail: text(formData, "newEmail")
+      },
+      meta
+    );
+  } catch (error) {
+    nextPath = withError("/settings", error);
+  }
+
+  redirect(nextPath);
+}
+
+export async function revealSensitiveSettingsAction(formData: FormData) {
+  try {
+    const user = await requirePageUser();
+    const meta = await getRequestMeta();
+    const data = await revealUserSensitiveData(
+      user.id,
+      text(formData, "currentPassword"),
+      meta
+    );
+
+    return {
+      ok: true as const,
+      data
+    };
+  } catch (error) {
+    return {
+      ok: false as const,
+      error: errorMessage(error)
+    };
+  }
 }

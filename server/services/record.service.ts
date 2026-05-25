@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { DELETED_RECORD_RESTORE_DAYS } from "@/lib/constants";
-import { addDays, endOfDay, startOfDay } from "@/lib/date";
+import { addDays } from "@/lib/date";
 import { prisma } from "@/server/db/prisma";
 import { writeSecurityLog } from "@/server/logs/security-log.service";
 import { recordSchema } from "@/server/validators/record.validator";
@@ -23,7 +23,6 @@ type RecordInput = {
 type RecordFilters = {
   query?: string;
   contactId?: string;
-  date?: string;
   phone?: string;
 };
 
@@ -144,15 +143,6 @@ function searchWhere(filters?: RecordFilters): Prisma.RecordWhereInput[] {
         ]
       });
     }
-  }
-
-  if (filters?.date) {
-    and.push({
-      createdAt: {
-        gte: startOfDay(filters.date),
-        lte: endOfDay(filters.date)
-      }
-    });
   }
 
   return and;

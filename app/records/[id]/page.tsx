@@ -1,8 +1,8 @@
 import { deleteRecordAction, updateRecordAction } from "@/app/actions";
 import { Notice } from "@/components/layout/notice";
 import { PageShell } from "@/components/layout/page-shell";
+import { RecordActions } from "@/components/records/record-actions";
 import { RecordForm } from "@/components/records/record-form";
-import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/format";
 import { requirePageUser } from "@/server/auth/session";
 import { listContacts } from "@/server/services/contact.service";
@@ -37,16 +37,13 @@ export default async function RecordPage({ params, searchParams }: RecordPagePro
         <>
           <RecordForm
             action={updateRecordAction.bind(null, record.id)}
+            actions={<RecordActions deleteAction={deleteRecordAction.bind(null, record.id)} />}
             contacts={contacts}
             record={record}
             submitLabel="Сохранить изменения"
           />
-          <form action={deleteRecordAction.bind(null, record.id)} className="mt-5">
-            <Button variant="secondary">Удалить запись</Button>
-          </form>
         </>
       )}
     </PageShell>
   );
 }
-

@@ -13,7 +13,8 @@ export type SecurityLogAction =
   | "record_updated"
   | "record_deleted"
   | "record_restored"
-  | "account_updated";
+  | "account_updated"
+  | "sensitive_data_viewed";
 
 export async function writeSecurityLog(input: {
   action: SecurityLogAction;

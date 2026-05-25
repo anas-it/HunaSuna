@@ -3,12 +3,15 @@ import { cookies } from "next/headers";
 import { requestPasswordRecoveryAction, resetPasswordAction } from "@/app/actions";
 import { Notice } from "@/components/layout/notice";
 import { Button } from "@/components/ui/button";
+import { redirectAuthenticatedUser } from "@/server/auth/session";
 
 type ForgotPasswordPageProps = {
   searchParams: Promise<{ error?: string; step?: string; target?: string }>;
 };
 
 export default async function ForgotPasswordPage({ searchParams }: ForgotPasswordPageProps) {
+  await redirectAuthenticatedUser();
+
   const params = await searchParams;
   const cookieStore = await cookies();
   const developmentCode = cookieStore.get("hunasuna_dev_recovery_code")?.value;
@@ -76,4 +79,3 @@ export default async function ForgotPasswordPage({ searchParams }: ForgotPasswor
     </main>
   );
 }
-

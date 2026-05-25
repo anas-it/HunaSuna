@@ -5,7 +5,6 @@ export async function searchRecords(
   filters: {
     query?: string;
     contactId?: string;
-    date?: string;
     phone?: string;
   }
 ) {

@@ -6,6 +6,7 @@ import { prisma } from "@/server/db/prisma";
 export const SESSION_COOKIE = "hunasuna_session";
 
 const SESSION_DAYS = 30;
+const SESSION_HOURS = 12;
 
 export type CurrentUser = {
   id: string;
@@ -22,18 +23,26 @@ function hashSessionToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-function sessionExpiresAt() {
+function sessionExpiresAt(remember: boolean) {
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + SESSION_DAYS);
+
+  if (remember) {
+    expiresAt.setDate(expiresAt.getDate() + SESSION_DAYS);
+  } else {
+    expiresAt.setHours(expiresAt.getHours() + SESSION_HOURS);
+  }
+
   return expiresAt;
 }
 
 export async function createSession(
   userId: string,
-  meta?: { ipAddress?: string; userAgent?: string }
+  meta?: { ipAddress?: string; userAgent?: string },
+  options?: { remember?: boolean }
 ) {
+  const remember = Boolean(options?.remember);
   const token = randomBytes(32).toString("hex");
-  const expiresAt = sessionExpiresAt();
+  const expiresAt = sessionExpiresAt(remember);
 
   await prisma.userSession.create({
     data: {
@@ -46,13 +55,21 @@ export async function createSession(
   });
 
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE, token, {
+  const cookieOptions = {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    expires: expiresAt,
     path: "/"
-  });
+  } as const;
+
+  if (remember) {
+    cookieStore.set(SESSION_COOKIE, token, {
+      ...cookieOptions,
+      expires: expiresAt
+    });
+  } else {
+    cookieStore.set(SESSION_COOKIE, token, cookieOptions);
+  }
 }
 
 export async function getCurrentUser(): Promise<CurrentUser | null> {
@@ -104,6 +121,20 @@ export async function requirePageSessionUser() {
   }
 
   return user;
+}
+
+export async function redirectAuthenticatedUser() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return;
+  }
+
+  if (!user.phoneVerified) {
+    redirect("/verify-phone");
+  }
+
+  redirect("/dashboard");
 }
 
 export async function destroyCurrentSession() {

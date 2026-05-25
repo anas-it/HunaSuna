@@ -56,7 +56,9 @@ export async function POST(request: NextRequest) {
 
     if (action === "login") {
       const result = await loginUser(body, meta);
-      await createSession(result.user.id, meta);
+      await createSession(result.user.id, meta, {
+        remember: Boolean(body.remember)
+      });
       return NextResponse.json({
         ok: true,
         user: publicUser(result.user),

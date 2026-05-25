@@ -13,10 +13,8 @@ export async function GET(request: NextRequest) {
   const records = await searchRecords(user.id, {
     query: searchParams.get("query") ?? undefined,
     contactId: searchParams.get("contactId") ?? undefined,
-    date: searchParams.get("date") ?? undefined,
     phone: searchParams.get("phone") ?? undefined
   });
 
   return NextResponse.json({ ok: true, records });
 }
-

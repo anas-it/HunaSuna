@@ -8,6 +8,8 @@
   --line: #d8dee8;
   --primary: #256f6c;
   --primary-foreground: #ffffff;
+  --font-sans: "Segoe UI Variable", "Segoe UI", Inter, system-ui, -apple-system,
+    BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
 }
 
 * {
@@ -23,10 +25,544 @@ body {
   margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+.logo-brand {
+  transform-origin: left center;
+  transition: transform 220ms ease;
+}
+
+.logo-brand-mark {
+  transform-origin: center;
+  animation: logo-mark-breathe 8s ease-in-out infinite;
+  transition:
+    background-color 260ms ease,
+    box-shadow 260ms ease,
+    transform 260ms ease;
+}
+
+.logo-brand-symbol {
+  transform-origin: center;
+  animation: logo-symbol-drift 10s ease-in-out infinite;
+}
+
+.logo-brand-text {
+  display: inline-flex;
+  transform-origin: left center;
+  animation: logo-word-breathe 9s ease-in-out infinite;
+  transition:
+    color 260ms ease,
+    transform 260ms ease,
+    text-shadow 260ms ease;
+}
+
+.logo-brand-huna,
+.logo-brand-suna {
+  display: inline-block;
+  transform-origin: center;
+  transition:
+    color 260ms ease,
+    transform 260ms ease,
+    text-shadow 260ms ease;
+}
+
+.logo-brand-huna {
+  animation: logo-huna-float 10s ease-in-out infinite;
+}
+
+.logo-brand-suna {
+  animation:
+    logo-suna-tone 9s ease-in-out infinite,
+    logo-suna-float 10s ease-in-out infinite;
+}
+
+.logo-brand:hover .logo-brand-mark {
+  background: #1f5d5a;
+  box-shadow:
+    0 8px 20px rgba(37, 111, 108, 0.2),
+    0 0 0 4px rgba(37, 111, 108, 0.08);
+  animation: logo-mark-hover 3.4s ease-in-out infinite;
+}
+
+.logo-brand:hover .logo-brand-symbol {
+  animation: logo-symbol-hover 3.4s ease-in-out infinite;
+}
+
+.logo-brand:hover .logo-brand-text {
+  color: #0f172a;
+  text-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  transform: translateX(1px);
+}
+
+.logo-brand:hover .logo-brand-suna {
+  color: #1f5d5a;
+}
+
+.logo-brand:hover .logo-brand-huna {
+  transform: translateY(-1px);
+}
+
+.logo-brand:hover .logo-brand-suna {
+  transform: translateY(-1px);
+}
+
+.logo-brand:active {
+  transform: scale(0.985);
+}
+
+.logo-brand:active .logo-brand-mark {
+  animation: none;
+  transform: scale(1.02);
+  box-shadow:
+    0 5px 14px rgba(37, 111, 108, 0.2),
+    0 0 0 5px rgba(37, 111, 108, 0.1);
+}
+
+.logo-brand:active .logo-brand-huna,
+.logo-brand:active .logo-brand-suna {
+  transform: translateY(1px);
+}
+
+.home-background {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(241, 245, 244, 0.76), rgba(232, 237, 236, 0.96)),
+    #eef2f1;
+}
+
+.home-grid-lines {
+  position: absolute;
+  inset: -80px;
+  background-image:
+    linear-gradient(rgba(17, 24, 39, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(17, 24, 39, 0.055) 1px, transparent 1px);
+  background-size: 72px 72px;
+  opacity: 0.82;
+  animation: home-grid-drift 28s linear infinite;
+}
+
+.home-flow-track {
+  position: absolute;
+  left: -18vw;
+  height: 1px;
+  width: 52vw;
+  background: rgba(37, 111, 108, 0.28);
+  transform: rotate(-12deg);
+  animation: home-track-slide 13s ease-in-out infinite;
+}
+
+.home-flow-track::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -2px;
+  height: 5px;
+  width: 5px;
+  border-radius: 999px;
+  background: #b45309;
+}
+
+.home-flow-track-one {
+  top: 24%;
+}
+
+.home-flow-track-two {
+  top: 52%;
+  width: 64vw;
+  animation-delay: -5s;
+  opacity: 0.62;
+}
+
+.home-flow-track-three {
+  top: 76%;
+  width: 46vw;
+  animation-delay: -9s;
+  opacity: 0.46;
+}
+
+.home-network {
+  position: absolute;
+  width: 280px;
+  height: 170px;
+  opacity: 0.42;
+  animation: home-network-drift 14s ease-in-out infinite;
+}
+
+.home-network-one {
+  right: 14vw;
+  bottom: 20%;
+}
+
+.home-network-two {
+  left: 13vw;
+  top: 18%;
+  width: 220px;
+  height: 130px;
+  animation-delay: -7s;
+  opacity: 0.28;
+}
+
+.home-network-node {
+  position: absolute;
+  z-index: 2;
+  height: 12px;
+  width: 12px;
+  border: 2px solid rgba(37, 111, 108, 0.34);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 18px rgba(17, 24, 39, 0.06);
+  animation: home-node-glow 5s ease-in-out infinite;
+}
+
+.home-network-node-one {
+  left: 7%;
+  top: 52%;
+}
+
+.home-network-node-two {
+  left: 48%;
+  top: 18%;
+  animation-delay: -1.8s;
+}
+
+.home-network-node-three {
+  right: 7%;
+  bottom: 18%;
+  animation-delay: -3.4s;
+}
+
+.home-network-line {
+  position: absolute;
+  left: 10%;
+  top: 56%;
+  height: 1px;
+  width: 46%;
+  background: rgba(37, 111, 108, 0.22);
+  transform: rotate(-29deg);
+  transform-origin: left center;
+}
+
+.home-network-line-two {
+  left: 52%;
+  top: 28%;
+  width: 43%;
+  transform: rotate(34deg);
+}
+
+.home-network-pulse {
+  position: absolute;
+  z-index: 3;
+  height: 7px;
+  width: 7px;
+  border-radius: 999px;
+  background: #256f6c;
+  box-shadow: 0 0 0 4px rgba(37, 111, 108, 0.12);
+  animation: home-pulse-route 5.8s ease-in-out infinite;
+}
+
+.home-network-pulse-one {
+  left: 9%;
+  top: 54%;
+}
+
+.home-network-pulse-two {
+  left: 50%;
+  top: 25%;
+  background: #b45309;
+  box-shadow: 0 0 0 4px rgba(180, 83, 9, 0.12);
+  animation-delay: -2.8s;
+}
+
+.home-data-stack {
+  position: absolute;
+  display: grid;
+  gap: 10px;
+  opacity: 0.55;
+  animation: home-stack-float 10s ease-in-out infinite;
+}
+
+.home-data-stack-primary {
+  right: max(48px, 8vw);
+  top: 18%;
+  width: min(420px, 34vw);
+}
+
+.home-data-stack-secondary {
+  bottom: 13%;
+  left: max(36px, 6vw);
+  width: min(360px, 30vw);
+  animation-delay: -4s;
+  opacity: 0.38;
+}
+
+.home-data-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 72px;
+  align-items: center;
+  gap: 12px;
+  height: 42px;
+  border: 1px solid rgba(216, 222, 232, 0.9);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0 12px;
+  box-shadow: 0 10px 26px rgba(17, 24, 39, 0.04);
+  animation: home-row-breathe 6s ease-in-out infinite;
+}
+
+.home-data-row:nth-child(2) {
+  animation-delay: -2s;
+}
+
+.home-data-row:nth-child(3) {
+  animation-delay: -4s;
+}
+
+.home-data-mark {
+  height: 18px;
+  width: 18px;
+  border-radius: 6px;
+  background: rgba(37, 111, 108, 0.2);
+  border: 1px solid rgba(37, 111, 108, 0.18);
+}
+
+.home-data-mark-warm {
+  background: rgba(180, 83, 9, 0.16);
+  border-color: rgba(180, 83, 9, 0.2);
+}
+
+.home-data-line {
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.23);
+}
+
+.home-data-line-short {
+  background: rgba(180, 83, 9, 0.22);
+}
+
+@keyframes logo-mark-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 2px 5px rgba(17, 24, 39, 0.12);
+  }
+
+  50% {
+    transform: translateY(-1.5px) scale(1.04);
+    box-shadow:
+      0 8px 18px rgba(37, 111, 108, 0.18),
+      0 0 0 3px rgba(37, 111, 108, 0.06);
+  }
+}
+
+@keyframes logo-symbol-drift {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(-2deg);
+  }
+}
+
+@keyframes logo-word-breathe {
+  0%,
+  100% {
+    opacity: 0.94;
+    transform: translateY(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-0.8px);
+  }
+}
+
+@keyframes logo-huna-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-0.7px);
+  }
+}
+
+@keyframes logo-suna-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes logo-suna-tone {
+  0%,
+  100% {
+    color: #256f6c;
+  }
+
+  50% {
+    color: #1f5d5a;
+  }
+}
+
+@keyframes logo-mark-hover {
+  0%,
+  100% {
+    transform: translateY(-1px) scale(1.04) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-2px) scale(1.08) rotate(-2deg);
+  }
+}
+
+@keyframes logo-symbol-hover {
+  0%,
+  100% {
+    transform: rotate(0deg) translateX(0);
+  }
+
+  50% {
+    transform: rotate(2deg) translateX(0.5px);
+  }
+}
+
+@keyframes home-grid-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(72px, 72px, 0);
+  }
+}
+
+@keyframes home-track-slide {
+  0%,
+  100% {
+    transform: translateX(-8vw) rotate(-12deg);
+  }
+
+  50% {
+    transform: translateX(64vw) rotate(-12deg);
+  }
+}
+
+@keyframes home-stack-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes home-row-breathe {
+  0%,
+  100% {
+    opacity: 0.58;
+  }
+
+  50% {
+    opacity: 0.92;
+  }
+}
+
+@keyframes home-network-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(16px, -12px, 0);
+  }
+}
+
+@keyframes home-node-glow {
+  0%,
+  100% {
+    border-color: rgba(37, 111, 108, 0.3);
+    transform: scale(1);
+  }
+
+  50% {
+    border-color: rgba(37, 111, 108, 0.6);
+    transform: scale(1.12);
+  }
+}
+
+@keyframes home-pulse-route {
+  0% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  48% {
+    transform: translate3d(110px, -66px, 0);
+    opacity: 1;
+  }
+
+  88% {
+    transform: translate3d(210px, 0, 0);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate3d(230px, 12px, 0);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 860px) {
+  .home-data-stack {
+    display: none;
+  }
+
+  .home-network {
+    opacity: 0.2;
+  }
+
+  .home-flow-track {
+    width: 86vw;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-grid-lines,
+  .home-flow-track,
+  .home-data-stack,
+  .home-data-row,
+  .home-network,
+  .home-network-node,
+  .home-network-pulse,
+  .logo-brand-mark,
+  .logo-brand-symbol,
+  .logo-brand-text,
+  .logo-brand-huna,
+  .logo-brand-suna {
+    animation: none;
+  }
 }

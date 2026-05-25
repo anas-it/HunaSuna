@@ -62,6 +62,7 @@ model Contact {
   firstName       String
   lastName        String
   phone           String
+  whatsapp        String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   deletedAt       DateTime?

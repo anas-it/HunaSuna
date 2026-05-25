@@ -7,6 +7,7 @@ type ContactInput = {
   firstName: string;
   lastName: string;
   phone: string;
+  whatsapp?: string;
 };
 
 export async function listContacts(userId: string) {
@@ -49,7 +50,8 @@ export async function createContact(
 ) {
   const data = contactSchema.parse({
     ...input,
-    phone: normalizePhone(input.phone)
+    phone: normalizePhone(input.phone),
+    whatsapp: input.whatsapp ? normalizePhone(input.whatsapp) : undefined
   });
 
   const contact = await prisma.contact.create({
@@ -57,7 +59,8 @@ export async function createContact(
       userId,
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
-      phone: data.phone
+      phone: data.phone,
+      whatsapp: data.whatsapp
     }
   });
 
@@ -83,7 +86,8 @@ export async function updateContact(
 
   const data = contactSchema.parse({
     ...input,
-    phone: normalizePhone(input.phone)
+    phone: normalizePhone(input.phone),
+    whatsapp: input.whatsapp ? normalizePhone(input.whatsapp) : undefined
   });
 
   const contact = await prisma.contact.update({
@@ -93,7 +97,8 @@ export async function updateContact(
     data: {
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
-      phone: data.phone
+      phone: data.phone,
+      whatsapp: data.whatsapp ?? null
     }
   });
 

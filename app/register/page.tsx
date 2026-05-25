@@ -2,12 +2,15 @@ import Link from "next/link";
 import { registerAction } from "@/app/actions";
 import { Notice } from "@/components/layout/notice";
 import { Button } from "@/components/ui/button";
+import { redirectAuthenticatedUser } from "@/server/auth/session";
 
 type RegisterPageProps = {
   searchParams: Promise<{ error?: string }>;
 };
 
 export default async function RegisterPage({ searchParams }: RegisterPageProps) {
+  await redirectAuthenticatedUser();
+
   const params = await searchParams;
 
   return (
@@ -59,4 +62,3 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
     </main>
   );
 }
-
