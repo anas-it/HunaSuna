@@ -3,6 +3,7 @@ import { listRecordsPage } from "@/server/services/record.service";
 export async function searchRecords(
   userId: string,
   filters: {
+    favorite?: boolean | string | null;
     limit?: number | string | null;
     page?: number | string | null;
     query?: string;

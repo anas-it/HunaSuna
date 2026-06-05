@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -13,10 +13,11 @@ import {
   type TextStyle,
   View
 } from "react-native";
-import { listRecords, searchContacts, type Contact, type RecordListItem } from "../api/hunasuna";
+import { listRecords, searchContacts, toggleRecordFavorite, type Contact, type RecordListItem } from "../api/hunasuna";
 import { ContactSuggestions } from "../components/ContactSuggestions";
 import { EmptyState, Message } from "../components/FormControls";
 import { RecordCard } from "../components/RecordCard";
+import { RecordFavoriteAction } from "../components/RecordFavoriteAction";
 import { colors, spacing } from "../styles/theme";
 import type { ApiUser } from "../types/api";
 import type { AppSection } from "../types/navigation";
@@ -34,7 +35,9 @@ export function HomeScreen({ user, onOpenSection, onSearch, token }: Props) {
   const [searchFocused, setSearchFocused] = useState(false);
   const [contactSuggestions, setContactSuggestions] = useState<Contact[]>([]);
   const [records, setRecords] = useState<RecordListItem[]>([]);
+  const [favoriteOnly, setFavoriteOnly] = useState(false);
   const [recordsLoading, setRecordsLoading] = useState(true);
+  const [favoriteLoadingId, setFavoriteLoadingId] = useState<string | null>(null);
   const [recordsError, setRecordsError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,7 +48,7 @@ export function HomeScreen({ user, onOpenSection, onSearch, token }: Props) {
       setRecordsError(null);
 
       try {
-        const result = await listRecords(token);
+        const result = await listRecords(token, 1, undefined, favoriteOnly);
 
         if (!cancelled) {
           setRecords(result.records);
@@ -66,7 +69,7 @@ export function HomeScreen({ user, onOpenSection, onSearch, token }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [favoriteOnly, token]);
 
   useEffect(() => {
     const normalizedQuery = searchQuery.trim();
@@ -109,6 +112,27 @@ export function HomeScreen({ user, onOpenSection, onSearch, token }: Props) {
     onSearch(value);
   }
 
+  async function toggleFavoriteRecord(record: RecordListItem) {
+    setFavoriteLoadingId(record.id);
+    setRecordsError(null);
+
+    try {
+      const result = await toggleRecordFavorite(token, record.id, !record.isFavorite);
+
+      setRecords((currentRecords) => {
+        if (favoriteOnly && !result.record.isFavorite) {
+          return currentRecords.filter((item) => item.id !== record.id);
+        }
+
+        return currentRecords.map((item) => (item.id === record.id ? result.record : item));
+      });
+    } catch (error) {
+      setRecordsError(error instanceof Error ? error.message : "Не удалось обновить избранное");
+    } finally {
+      setFavoriteLoadingId(null);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.screen} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -149,18 +173,42 @@ export function HomeScreen({ user, onOpenSection, onSearch, token }: Props) {
         <View style={styles.recordsSection}>
           <View style={styles.recordsHeader}>
             <Text style={styles.recordsTitle}>Записи</Text>
-            <Pressable onPress={() => onOpenSection("records")} style={styles.recordsLink}>
-              <Text style={styles.recordsLinkText}>Все</Text>
-              <Feather color={colors.primary} name="chevron-right" size={18} />
-            </Pressable>
+            <View style={styles.recordsHeaderActions}>
+              <Pressable
+                accessibilityLabel={favoriteOnly ? "Показать обычные записи" : "Показать избранные записи"}
+                onPress={() => setFavoriteOnly((current) => !current)}
+                style={({ pressed }) => [
+                  styles.favoriteFilterButton,
+                  favoriteOnly ? styles.favoriteFilterButtonActive : null,
+                  pressed ? styles.favoriteFilterButtonPressed : null
+                ]}
+              >
+                <FontAwesome color={favoriteOnly ? "#D99A00" : colors.primary} name={favoriteOnly ? "star" : "star-o"} size={18} />
+              </Pressable>
+              <Pressable onPress={() => onOpenSection("records")} style={styles.recordsLink}>
+                <Text style={styles.recordsLinkText}>Все</Text>
+                <Feather color={colors.primary} name="chevron-right" size={18} />
+              </Pressable>
+            </View>
           </View>
 
           {recordsError ? <Message>{recordsError}</Message> : null}
           {recordsLoading ? <ActivityIndicator color={colors.primary} size="large" /> : null}
-          {!recordsLoading && !records.length ? <EmptyState text="Записей пока нет." /> : null}
+          {!recordsLoading && !records.length ? <EmptyState text={favoriteOnly ? "В избранном пока нет записей." : "Записей пока нет."} /> : null}
 
           {records.map((record) => (
-            <RecordCard key={record.id} record={record} />
+            <RecordCard
+              actions={
+                <RecordFavoriteAction
+                  disabled={Boolean(favoriteLoadingId)}
+                  isFavorite={record.isFavorite}
+                  loading={favoriteLoadingId === record.id}
+                  onPress={() => void toggleFavoriteRecord(record)}
+                />
+              }
+              key={record.id}
+              record={record}
+            />
           ))}
         </View>
       </ScrollView>
@@ -293,10 +341,33 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: spacing.md
   },
+  recordsHeaderActions: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm
+  },
   recordsTitle: {
     color: colors.text,
     fontSize: 22,
     fontWeight: "700"
+  },
+  favoriteFilterButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    borderColor: "#BFE3E6",
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: "#EEF8F9"
+  },
+  favoriteFilterButtonActive: {
+    borderColor: "#F2D17A",
+    backgroundColor: "#FFF7D6"
+  },
+  favoriteFilterButtonPressed: {
+    opacity: 0.82,
+    transform: [{ scale: 0.96 }]
   },
   recordsLink: {
     minHeight: 40,

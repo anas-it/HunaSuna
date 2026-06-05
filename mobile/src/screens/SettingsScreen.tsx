@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { Alert, Pressable, StyleSheet, Text, TextInput, type TextInputProps, type TextStyle, View } from "react-native";
+import { Alert, Linking, Pressable, StyleSheet, Text, TextInput, type TextInputProps, type TextStyle, View } from "react-native";
 import { revealSensitiveData, updateEmail, updatePassword, updateProfile, type SensitiveData } from "../api/hunasuna";
 import { ActionButton, Message } from "../components/FormControls";
 import { ScreenLayout } from "../components/ScreenLayout";
@@ -17,6 +17,8 @@ type Props = {
 };
 
 type SettingsPanelId = "profile" | "sensitive" | "password" | "email" | null;
+
+const PRIVACY_POLICY_URL = "https://hunasuna.pro/privacy";
 
 type SettingsFieldProps = Pick<TextInputProps, "autoCapitalize" | "editable" | "keyboardType" | "secureTextEntry"> & {
   icon: keyof typeof Feather.glyphMap;
@@ -136,6 +138,10 @@ export function SettingsScreen({ onBack, onLogout, onUserChange, token, user }: 
         onPress: onLogout
       }
     ]);
+  }
+
+  function openPrivacyPolicy() {
+    void Linking.openURL(PRIVACY_POLICY_URL);
   }
 
   return (
@@ -275,6 +281,14 @@ export function SettingsScreen({ onBack, onLogout, onUserChange, token, user }: 
           ) : null}
         </SettingsPanel>
 
+        <Pressable accessibilityRole="link" onPress={openPrivacyPolicy} style={({ pressed }) => [styles.privacyLinkButton, pressed ? styles.privacyLinkPressed : null]}>
+          <View style={styles.logoutIcon}>
+            <Feather color={colors.primary} name="shield" size={20} />
+          </View>
+          <Text style={styles.privacyLinkText}>Политика конфиденциальности</Text>
+          <Feather color={colors.muted} name="external-link" size={18} />
+        </Pressable>
+
         <Pressable onPress={confirmLogout} style={({ pressed }) => [styles.logoutButton, pressed ? styles.logoutButtonPressed : null]}>
           <View style={styles.logoutIcon}>
             <Feather color={colors.danger} name="log-out" size={20} />
@@ -328,8 +342,8 @@ function SettingsField({
     <View style={[styles.field, !editable ? styles.fieldReadonly : null]}>
       <Feather color={editable ? colors.primary : colors.muted} name={icon} size={18} />
       <View style={styles.fieldBody}>
-        <Text style={styles.fieldLabel}>{label}</Text>
         <TextInput
+          accessibilityLabel={label}
           autoCapitalize={autoCapitalize}
           editable={editable}
           keyboardType={keyboardType}
@@ -450,11 +464,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: spacing.xs
   },
-  fieldLabel: {
-    color: colors.muted,
-    fontSize: 12,
-    fontWeight: "700"
-  },
   input: {
     minHeight: 28,
     color: colors.text,
@@ -486,6 +495,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     textAlign: "right"
+  },
+  privacyLinkButton: {
+    minHeight: 52,
+    alignItems: "center",
+    borderColor: "#BFE3E6",
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: "#EEF8F9",
+    flexDirection: "row",
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md
+  },
+  privacyLinkPressed: {
+    backgroundColor: "#E1F3F5"
+  },
+  privacyLinkText: {
+    color: colors.text,
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "800"
   },
   logoutButton: {
     minHeight: 52,

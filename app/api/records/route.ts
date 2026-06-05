@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
   const result = await listRecordsPage(user.id, {
     query: searchParams.get("query") ?? undefined,
     contactId: searchParams.get("contactId") ?? undefined,
+    favorite: searchParams.get("favorite"),
     phone: searchParams.get("phone") ?? undefined,
     page: searchParams.get("page"),
     limit: searchParams.get("limit")

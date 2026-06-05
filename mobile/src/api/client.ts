@@ -7,6 +7,8 @@ type RequestOptions = {
   token?: string | null;
 };
 
+const REQUEST_TIMEOUT_MS = 15000;
+
 let unauthorizedHandler: (() => void | Promise<void>) | null = null;
 
 export function setUnauthorizedHandler(handler: (() => void | Promise<void>) | null) {
@@ -40,15 +42,26 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}) 
   }
 
   let response: Response;
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS) : null;
 
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method: options.method ?? "GET",
       headers,
-      body: options.body ? JSON.stringify(options.body) : undefined
+      body: options.body ? JSON.stringify(options.body) : undefined,
+      signal: controller?.signal
     });
-  } catch {
-    throw new Error("Не удалось подключиться к сайту. Проверьте, что Next.js запущен и телефон в той же сети.");
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("Сайт не ответил за 15 секунд. Если приложение открыто через tunnel или телефон в другой сети, API должен быть доступен по публичному HTTPS-адресу.");
+    }
+
+    throw new Error("Не удалось подключиться к сайту. Проверьте адрес API, интернет на телефоне и что Next.js запущен.");
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
   }
 
   const contentType = response.headers.get("content-type") ?? "";

@@ -30,6 +30,7 @@ type RecordInput = {
 };
 
 type RecordFilters = {
+  favorite?: boolean | string | null;
   limit?: number | string | null;
   page?: number | string | null;
   query?: string;
@@ -100,6 +101,7 @@ export const recordListSelect = {
   currency: true,
   rate: true,
   timezone: true,
+  isFavorite: true,
   restoreUntil: true
 } satisfies Prisma.RecordSelect;
 
@@ -265,6 +267,14 @@ function searchWhere(filters?: RecordFilters): Prisma.RecordWhereInput[] {
   return and;
 }
 
+function favoriteFilter(value?: boolean | string | null) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  return value === "true";
+}
+
 export async function listRecords(userId: string, filters?: RecordFilters) {
   const and = searchWhere(filters);
   const pagination = resolvePagination(
@@ -278,6 +288,7 @@ export async function listRecords(userId: string, filters?: RecordFilters) {
       userId,
       deletedAt: null,
       archivedAt: null,
+      ...(favoriteFilter(filters?.favorite) ? { isFavorite: true } : {}),
       ...(and.length ? { AND: and } : {})
     },
     select: recordListSelect,
@@ -300,6 +311,7 @@ export async function listRecordsPage(userId: string, filters?: RecordFilters) {
     userId,
     deletedAt: null,
     archivedAt: null,
+    ...(favoriteFilter(filters?.favorite) ? { isFavorite: true } : {}),
     ...(and.length ? { AND: and } : {})
   };
   const [records, total] = await prisma.$transaction([
@@ -422,6 +434,40 @@ export async function updateRecord(
 
   await writeSecurityLog({
     action: "record_updated",
+    userId,
+    ipAddress: meta?.ipAddress,
+    metadata: {
+      recordId
+    }
+  });
+
+  return record;
+}
+
+export async function updateRecordFavorite(
+  userId: string,
+  recordId: string,
+  isFavorite: boolean,
+  meta?: { ipAddress?: string }
+) {
+  const existingRecord = await getRecord(userId, recordId);
+
+  if (existingRecord.deletedAt) {
+    throw new Error("Удаленную запись нельзя добавлять в избранное");
+  }
+
+  const record = await prisma.record.update({
+    where: {
+      id: recordId
+    },
+    data: {
+      isFavorite
+    },
+    select: recordListSelect
+  });
+
+  await writeSecurityLog({
+    action: isFavorite ? "record_favorite_added" : "record_favorite_removed",
     userId,
     ipAddress: meta?.ipAddress,
     metadata: {

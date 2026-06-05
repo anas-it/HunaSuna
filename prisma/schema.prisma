@@ -92,6 +92,7 @@ model Record {
   currency                   String
   rate                       String
   timezone                   String
+  isFavorite                 Boolean   @default(false)
   createdAt                  DateTime  @default(now())
   updatedAt                  DateTime  @updatedAt
   deletedAt                  DateTime?
@@ -106,6 +107,7 @@ model Record {
   @@index([userId, deletedAt])
   @@index([userId, restoreUntil])
   @@index([userId, deletedAt, archivedAt, createdAt], map: "Record_user_active_date_idx")
+  @@index([userId, isFavorite, deletedAt, archivedAt, createdAt], map: "Record_user_favorite_active_date_idx")
   @@index([userId, senderContactId, deletedAt, archivedAt, createdAt], map: "Record_user_sender_history_idx")
   @@index([userId, receiverContactId, deletedAt, archivedAt, createdAt], map: "Record_user_receiver_history_idx")
   @@index([restoreUntil, archivedAt], map: "Record_archive_due_idx")

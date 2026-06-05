@@ -24,26 +24,26 @@ export function RecordCard({ actions, highlighted = false, record }: Props) {
         onLongPress={() => setDetailsOpen(true)}
         style={({ pressed }) => [styles.card, pressed ? styles.cardPressed : null]}
       >
-        <View style={styles.routeRow}>
-          <PersonBlock label="От" name={senderName} />
-          <View style={styles.arrowCircle}>
-            <Feather color={colors.primary} name="arrow-right" size={17} />
+        <View style={styles.summaryRow}>
+          <View style={styles.peopleColumn}>
+            <PersonBlock label="От" name={senderName} />
+            <PersonBlock label="Кому" name={receiverName} />
           </View>
-          <PersonBlock label="Кому" name={receiverName} />
+          <View style={styles.moneyColumn}>
+            <Text numberOfLines={1} style={styles.amount}>
+              {record.amount} {record.currency}
+            </Text>
+          </View>
         </View>
 
-        <View style={styles.amountRow}>
-          <Text numberOfLines={1} style={styles.amount}>
-            {record.amount} {record.currency}
-          </Text>
+        <View style={styles.metaRow}>
+          <View style={styles.dateRow}>
+            <Feather color={colors.muted} name="clock" size={15} />
+            <Text numberOfLines={1} style={styles.date}>{formatDateTime(record.createdAt)}</Text>
+          </View>
           <View style={styles.ratePill}>
             <Text numberOfLines={1} style={styles.rateText}>курс {record.rate}</Text>
           </View>
-        </View>
-
-        <View style={styles.dateRow}>
-          <Feather color={colors.muted} name="clock" size={15} />
-          <Text style={styles.date}>{formatDateTime(record.createdAt)}</Text>
         </View>
 
         {record.restoreUntil ? <Text style={styles.restore}>Можно восстановить до {formatDateTime(record.restoreUntil)}</Text> : null}
@@ -164,13 +164,23 @@ const styles = StyleSheet.create({
   cardPressed: {
     backgroundColor: "#F1F8F9"
   },
-  routeRow: {
-    alignItems: "center",
+  summaryRow: {
+    alignItems: "flex-start",
     flexDirection: "row",
-    gap: spacing.xs
+    gap: spacing.sm,
+    justifyContent: "space-between"
+  },
+  peopleColumn: {
+    flex: 1,
+    gap: spacing.xs,
+    minWidth: 0
+  },
+  moneyColumn: {
+    alignItems: "flex-end",
+    flexShrink: 0,
+    maxWidth: 138
   },
   personBlock: {
-    flex: 1,
     minWidth: 0
   },
   personLabel: {
@@ -185,17 +195,7 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     lineHeight: 22
   },
-  arrowCircle: {
-    width: 30,
-    height: 30,
-    alignItems: "center",
-    justifyContent: "center",
-    borderColor: "#BFE3E6",
-    borderRadius: 15,
-    borderWidth: 1,
-    backgroundColor: "#EEF8F9"
-  },
-  amountRow: {
+  metaRow: {
     alignItems: "center",
     flexDirection: "row",
     gap: spacing.sm,
@@ -203,16 +203,17 @@ const styles = StyleSheet.create({
   },
   amount: {
     color: colors.text,
-    flex: 1,
     fontSize: 20,
     fontWeight: "900",
-    lineHeight: 26
+    lineHeight: 26,
+    textAlign: "right"
   },
   ratePill: {
     borderColor: "#BFE3E6",
     borderRadius: 8,
     borderWidth: 1,
     backgroundColor: "#EEF8F9",
+    flexShrink: 0,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs
   },
@@ -223,11 +224,14 @@ const styles = StyleSheet.create({
   },
   dateRow: {
     alignItems: "center",
+    flex: 1,
     flexDirection: "row",
-    gap: spacing.xs
+    gap: spacing.xs,
+    minWidth: 0
   },
   date: {
     color: colors.muted,
+    flex: 1,
     fontSize: 13,
     fontWeight: "600"
   },

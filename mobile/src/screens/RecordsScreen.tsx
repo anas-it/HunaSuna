@@ -1,4 +1,4 @@
-import { Feather } from "@expo/vector-icons";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, Keyboard, Pressable, StyleSheet, Text, TextInput, type TextStyle, View } from "react-native";
 import {
@@ -9,6 +9,7 @@ import {
   searchContacts,
   searchRecords,
   searchRecordsByContact,
+  toggleRecordFavorite,
   type Contact,
   type PaginationMeta,
   type RecordDetail,
@@ -18,6 +19,7 @@ import { ContactSuggestions } from "../components/ContactSuggestions";
 import { EmptyState, Message, PaginationControls } from "../components/FormControls";
 import { RecordCard } from "../components/RecordCard";
 import { RecordEditor } from "../components/RecordEditor";
+import { RecordFavoriteAction } from "../components/RecordFavoriteAction";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { colors, spacing } from "../styles/theme";
 import { contactName } from "../utils/format";
@@ -42,12 +44,14 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
   const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
   const [contactSuggestions, setContactSuggestions] = useState<Contact[]>([]);
   const [sortMode, setSortMode] = useState<SortMode>("date");
+  const [favoriteOnly, setFavoriteOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [highlightedRecordId, setHighlightedRecordId] = useState<string | null>(initialHighlightedRecordId);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searching, setSearching] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [favoriteLoadingId, setFavoriteLoadingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<"error" | "success">("error");
   const listVisible = !editingRecord && !showCreateForm;
@@ -66,8 +70,9 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
     return nextRecords.sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime());
   }, [records, sortMode]);
 
-  async function loadData(isRefresh = false, options?: { forceList?: boolean; page?: number }) {
+  async function loadData(isRefresh = false, options?: { favoriteOnly?: boolean; forceList?: boolean; page?: number }) {
     const nextPage = options?.page ?? page;
+    const nextFavoriteOnly = options?.favoriteOnly ?? favoriteOnly;
 
     if (isRefresh) {
       setRefreshing(true);
@@ -81,11 +86,11 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
       const normalizedQuery = searchQuery.trim();
       const recordsRequest = !options?.forceList && searchActive
         ? selectedContactId
-          ? searchRecordsByContact(token, selectedContactId, nextPage)
+          ? searchRecordsByContact(token, selectedContactId, nextPage, undefined, nextFavoriteOnly)
           : normalizedQuery
-            ? searchRecords(token, normalizedQuery, nextPage)
-            : listRecords(token, nextPage)
-        : listRecords(token, nextPage);
+            ? searchRecords(token, normalizedQuery, nextPage, undefined, nextFavoriteOnly)
+            : listRecords(token, nextPage, undefined, nextFavoriteOnly)
+        : listRecords(token, nextPage, undefined, nextFavoriteOnly);
       const [contactsResult, recordsResult] = await Promise.all([listContacts(token), recordsRequest]);
       setContacts(contactsResult.contacts);
       setRecords(recordsResult.records);
@@ -197,6 +202,35 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
     }
   }
 
+  async function toggleFavoriteFilter() {
+    const nextFavoriteOnly = !favoriteOnly;
+
+    setFavoriteOnly(nextFavoriteOnly);
+    setHighlightedRecordId(null);
+    setPage(1);
+    await loadData(true, { favoriteOnly: nextFavoriteOnly, page: 1 });
+  }
+
+  async function toggleFavoriteRecord(record: RecordListItem) {
+    setFavoriteLoadingId(record.id);
+    setMessage(null);
+
+    try {
+      const result = await toggleRecordFavorite(token, record.id, !record.isFavorite);
+
+      setRecords((currentRecords) => currentRecords.map((item) => (item.id === record.id ? result.record : item)));
+
+      if (favoriteOnly && !result.record.isFavorite) {
+        await loadData(true, { page });
+      }
+    } catch (error) {
+      setMessageTone("error");
+      setMessage(error instanceof Error ? error.message : "Не удалось обновить избранное");
+    } finally {
+      setFavoriteLoadingId(null);
+    }
+  }
+
   function confirmDelete(recordId: string) {
     Alert.alert("Удалить запись?", "Запись можно восстановить из раздела “Удаленные” в течение 7 дней.", [
       {
@@ -229,8 +263,8 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
 
     try {
       const result = contactId
-        ? await searchRecordsByContact(token, contactId, nextPage)
-        : await searchRecords(token, normalizedQuery, nextPage);
+        ? await searchRecordsByContact(token, contactId, nextPage, undefined, favoriteOnly)
+        : await searchRecords(token, normalizedQuery, nextPage, undefined, favoriteOnly);
       setRecords(result.records);
       setPagination(result.pagination);
       setPage(result.pagination.page);
@@ -295,15 +329,37 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
           <View style={styles.toolbar}>
             <Pressable onPress={() => setShowCreateForm(true)} style={({ pressed }) => [styles.createButton, pressed ? styles.createButtonPressed : null]}>
               <Feather color={colors.surface} name="plus-circle" size={18} />
-              <Text style={styles.createButtonText}>Создать запись</Text>
+              <Text adjustsFontSizeToFit minimumFontScale={0.84} numberOfLines={1} style={styles.createButtonText}>Создать запись</Text>
             </Pressable>
-            <Pressable
-              accessibilityLabel={searchOpen ? "Закрыть поиск" : "Открыть поиск"}
-              onPress={() => setSearchOpen((current) => !current)}
-              style={({ pressed }) => [styles.searchToggle, pressed ? styles.searchTogglePressed : null]}
-            >
-              <Feather color={colors.primary} name={searchOpen ? "x" : "search"} size={21} />
-            </Pressable>
+            <View style={styles.toolbarActions}>
+              <Pressable
+                accessibilityLabel={favoriteOnly ? "Показать все записи" : "Показать избранные записи"}
+                onPress={() => void toggleFavoriteFilter()}
+                style={({ pressed }) => [
+                  styles.toolbarIconButton,
+                  favoriteOnly ? styles.favoriteToggleActive : null,
+                  pressed ? styles.toolbarIconButtonPressed : null
+                ]}
+              >
+                <FontAwesome color={favoriteOnly ? "#D99A00" : colors.primary} name={favoriteOnly ? "star" : "star-o"} size={20} />
+              </Pressable>
+              <View style={styles.toolbarDivider} />
+              <Pressable
+                accessibilityLabel={searchOpen ? "Закрыть поиск" : "Открыть поиск"}
+                onPress={() => setSearchOpen((current) => !current)}
+                style={({ pressed }) => [
+                  styles.toolbarIconButton,
+                  searchOpen ? styles.searchToggleActive : null,
+                  pressed ? styles.toolbarIconButtonPressed : null
+                ]}
+              >
+                <Feather color={colors.primary} name={searchOpen ? "x" : "search"} size={21} />
+              </Pressable>
+            </View>
+            <View style={styles.sortControls}>
+              <SortButton active={sortMode === "date"} label="Дата" onPress={() => setSortMode("date")} />
+              <SortButton active={sortMode === "alpha"} label="А-Я" onPress={() => setSortMode("alpha")} />
+            </View>
           </View>
         ) : null}
 
@@ -335,16 +391,6 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
               onSelect={selectContactSuggestion}
               visible={Boolean(searchQuery.trim() && contactSuggestions.length)}
             />
-          </View>
-        ) : null}
-
-        {!loading && listVisible ? (
-          <View style={styles.sortBar}>
-            <Text style={styles.sortLabel}>Сортировка</Text>
-            <View style={styles.sortControls}>
-              <SortButton active={sortMode === "date"} label="Дата" onPress={() => setSortMode("date")} />
-              <SortButton active={sortMode === "alpha"} label="А-Я" onPress={() => setSortMode("alpha")} />
-            </View>
           </View>
         ) : null}
 
@@ -386,7 +432,10 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
         ) : null}
 
         {!loading && listVisible && !sortedRecords.length ? (
-          <EmptyState icon={searchActive ? "search" : "inbox"} text={searchActive ? "Поиск ничего не нашел." : "Записей пока нет."} />
+          <EmptyState
+            icon={searchActive ? "search" : favoriteOnly ? "star" : "inbox"}
+            text={searchActive ? "Поиск ничего не нашел." : favoriteOnly ? "В избранном пока нет записей." : "Записей пока нет."}
+          />
         ) : null}
 
         {listVisible ? sortedRecords.map((record) => (
@@ -396,15 +445,21 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
             record={record}
             actions={
               <>
+                <RecordFavoriteAction
+                  disabled={Boolean(actionLoadingId) || Boolean(favoriteLoadingId)}
+                  isFavorite={record.isFavorite}
+                  loading={favoriteLoadingId === record.id}
+                  onPress={() => void toggleFavoriteRecord(record)}
+                />
                 <RecordIconAction
-                  disabled={Boolean(actionLoadingId)}
+                  disabled={Boolean(actionLoadingId) || Boolean(favoriteLoadingId)}
                   icon="edit-2"
                   loading={actionLoadingId === record.id}
                   onPress={() => void beginEdit(record.id)}
                   tone="primary"
                 />
                 <RecordIconAction
-                  disabled={Boolean(actionLoadingId)}
+                  disabled={Boolean(actionLoadingId) || Boolean(favoriteLoadingId)}
                   icon="trash-2"
                   loading={actionLoadingId === record.id}
                   onPress={() => confirmDelete(record.id)}
@@ -470,10 +525,11 @@ const styles = StyleSheet.create({
   toolbar: {
     alignItems: "center",
     flexDirection: "row",
-    gap: spacing.sm
+    gap: spacing.xs
   },
   createButton: {
-    minHeight: 48,
+    minHeight: 44,
+    minWidth: 0,
     alignItems: "center",
     borderRadius: 8,
     backgroundColor: colors.primary,
@@ -481,28 +537,47 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: spacing.xs,
     justifyContent: "center",
-    paddingHorizontal: spacing.md
+    paddingHorizontal: spacing.sm
   },
   createButtonPressed: {
     backgroundColor: colors.primaryPressed
   },
   createButtonText: {
     color: colors.surface,
-    fontSize: 15,
+    flexShrink: 1,
+    fontSize: 14,
     fontWeight: "800"
   },
-  searchToggle: {
-    width: 48,
-    height: 48,
+  toolbarActions: {
+    height: 44,
     alignItems: "center",
-    justifyContent: "center",
     borderColor: "#BFE3E6",
     borderRadius: 8,
     borderWidth: 1,
-    backgroundColor: "#EEF8F9"
+    backgroundColor: "#EEF8F9",
+    flexDirection: "row",
+    flexShrink: 0,
+    overflow: "hidden"
   },
-  searchTogglePressed: {
-    borderColor: colors.primary,
+  toolbarIconButton: {
+    width: 40,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent"
+  },
+  toolbarIconButtonPressed: {
+    backgroundColor: "#E1F3F5"
+  },
+  toolbarDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: "#BFE3E6"
+  },
+  favoriteToggleActive: {
+    backgroundColor: "#FFF7D6"
+  },
+  searchToggleActive: {
     backgroundColor: "#E1F3F5"
   },
   searchStack: {
@@ -542,31 +617,22 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     backgroundColor: colors.primary
   },
-  sortBar: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: spacing.sm
-  },
-  sortLabel: {
-    color: colors.muted,
-    fontSize: 13,
-    fontWeight: "800"
-  },
   sortControls: {
+    height: 44,
     borderColor: colors.border,
     borderRadius: 8,
     borderWidth: 1,
     backgroundColor: colors.surface,
     flexDirection: "row",
+    flexShrink: 0,
     overflow: "hidden"
   },
   sortButton: {
-    minHeight: 38,
-    minWidth: 64,
+    minHeight: 42,
+    minWidth: 40,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: spacing.sm
+    paddingHorizontal: 8
   },
   sortButtonActive: {
     backgroundColor: colors.primary

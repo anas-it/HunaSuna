@@ -34,6 +34,7 @@ export type RecordListItem = {
   currency: string;
   rate: string;
   timezone: string;
+  isFavorite: boolean;
   restoreUntil: string | null;
 };
 
@@ -112,11 +113,19 @@ export async function getContactHistory(token: string, contactId: string, page =
   }>(`/api/contacts/${contactId}?page=${page}&limit=${limit}`, { token });
 }
 
-export async function listRecords(token: string, page = 1, limit = RECORDS_PAGE_LIMIT) {
+function favoriteQueryParam(favoriteOnly?: boolean) {
+  return favoriteOnly ? "&favorite=true" : "";
+}
+
+function recordsPageQuery(page: number, limit: number, favoriteOnly: boolean) {
+  return `page=${page}&limit=${limit}${favoriteQueryParam(favoriteOnly)}`;
+}
+
+export async function listRecords(token: string, page = 1, limit = RECORDS_PAGE_LIMIT, favoriteOnly = false) {
   return apiRequest<{
     records: RecordListItem[];
     pagination: PaginationMeta;
-  }>(`/api/records?page=${page}&limit=${limit}`, { token });
+  }>(`/api/records?${recordsPageQuery(page, limit, favoriteOnly)}`, { token });
 }
 
 export async function getRecord(token: string, recordId: string) {
@@ -138,18 +147,28 @@ export async function deleteRecord(token: string, recordId: string) {
   });
 }
 
-export async function searchRecords(token: string, query: string, page = 1, limit = RECORDS_PAGE_LIMIT) {
-  return apiRequest<{
-    records: RecordListItem[];
-    pagination: PaginationMeta;
-  }>(`/api/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`, { token });
+export async function toggleRecordFavorite(token: string, recordId: string, isFavorite: boolean) {
+  return apiRequest<{ record: RecordListItem }>(`/api/records/${recordId}/favorite`, {
+    method: "PATCH",
+    token,
+    body: {
+      isFavorite
+    }
+  });
 }
 
-export async function searchRecordsByContact(token: string, contactId: string, page = 1, limit = RECORDS_PAGE_LIMIT) {
+export async function searchRecords(token: string, query: string, page = 1, limit = RECORDS_PAGE_LIMIT, favoriteOnly = false) {
   return apiRequest<{
     records: RecordListItem[];
     pagination: PaginationMeta;
-  }>(`/api/search?contactId=${encodeURIComponent(contactId)}&page=${page}&limit=${limit}`, { token });
+  }>(`/api/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}${favoriteQueryParam(favoriteOnly)}`, { token });
+}
+
+export async function searchRecordsByContact(token: string, contactId: string, page = 1, limit = RECORDS_PAGE_LIMIT, favoriteOnly = false) {
+  return apiRequest<{
+    records: RecordListItem[];
+    pagination: PaginationMeta;
+  }>(`/api/search?contactId=${encodeURIComponent(contactId)}&page=${page}&limit=${limit}${favoriteQueryParam(favoriteOnly)}`, { token });
 }
 
 export async function listDeletedRecords(token: string, page = 1, limit = RECORDS_PAGE_LIMIT) {

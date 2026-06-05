@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useEffect, useState, type ComponentProps } from "react";
-import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Alert, Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import {
   deleteContact,
   getContactHistory,
@@ -39,6 +39,7 @@ const emptyForm: ContactForm = {
 };
 
 const CONTACTS_SEARCH_LIMIT = 100;
+const INLINE_ACTIONS_WIDTH = 122;
 
 async function getContactsByQuery(token: string, query: string) {
   const normalizedQuery = query.trim();
@@ -60,6 +61,7 @@ export function ContactsScreen({ onBack, token }: Props) {
   const [saving, setSaving] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [historyLoadingId, setHistoryLoadingId] = useState<string | null>(null);
+  const [openActionsContactId, setOpenActionsContactId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [messageTone, setMessageTone] = useState<"error" | "success">("error");
 
@@ -125,6 +127,7 @@ export function ContactsScreen({ onBack, token }: Props) {
   }, [searchQuery, token]);
 
   function openNewContactForm() {
+    setOpenActionsContactId(null);
     setEditingContact(null);
     setForm(emptyForm);
     setIsFormOpen(true);
@@ -134,6 +137,7 @@ export function ContactsScreen({ onBack, token }: Props) {
   }
 
   function editContact(contact: Contact) {
+    setOpenActionsContactId(null);
     setEditingContact(contact);
     setIsFormOpen(true);
     setHistoryContact(null);
@@ -148,9 +152,15 @@ export function ContactsScreen({ onBack, token }: Props) {
   }
 
   function resetForm() {
+    setOpenActionsContactId(null);
     setEditingContact(null);
     setForm(emptyForm);
     setIsFormOpen(false);
+  }
+
+  function handleSearchQueryChange(value: string) {
+    setOpenActionsContactId(null);
+    setSearchQuery(value);
   }
 
   async function submitContact() {
@@ -172,6 +182,7 @@ export function ContactsScreen({ onBack, token }: Props) {
   }
 
   async function removeContact(contact: Contact) {
+    setOpenActionsContactId(null);
     setMessage(null);
 
     try {
@@ -197,6 +208,7 @@ export function ContactsScreen({ onBack, token }: Props) {
   }
 
   function confirmDelete(contact: Contact) {
+    setOpenActionsContactId(null);
     Alert.alert("Удалить контакт?", "Контакт исчезнет из списка, но созданные раньше записи сохранятся.", [
       {
         text: "Отмена",
@@ -211,6 +223,7 @@ export function ContactsScreen({ onBack, token }: Props) {
   }
 
   async function openHistory(contact: Contact, page = 1) {
+    setOpenActionsContactId(null);
     setHistoryLoadingId(contact.id);
     setMessage(null);
 
@@ -256,7 +269,7 @@ export function ContactsScreen({ onBack, token }: Props) {
             <Feather color={colors.muted} name="search" size={18} />
             <TextInput
               autoCapitalize="none"
-              onChangeText={setSearchQuery}
+              onChangeText={handleSearchQueryChange}
               placeholder="Имя, фамилия или номер"
               placeholderTextColor={colors.muted}
               style={styles.searchInput}
@@ -266,7 +279,7 @@ export function ContactsScreen({ onBack, token }: Props) {
             {!searchLoading && searchQuery ? (
               <Pressable
                 accessibilityLabel="Очистить поиск"
-                onPress={() => setSearchQuery("")}
+                onPress={() => handleSearchQueryChange("")}
                 style={({ pressed }) => [styles.clearSearchButton, pressed ? styles.clearSearchButtonPressed : null]}
               >
                 <Feather color={colors.muted} name="x" size={17} />
@@ -334,14 +347,18 @@ export function ContactsScreen({ onBack, token }: Props) {
 
         {!isFormOpen ? (
           <View style={styles.contactsList}>
-            {contacts.map((contact) => (
+            {contacts.map((contact, index) => (
               <ContactCard
+                actionsOpen={openActionsContactId === contact.id}
                 contact={contact}
                 historyLoading={historyLoadingId === contact.id}
+                isLast={index === contacts.length - 1}
                 key={contact.id}
+                onCloseActions={() => setOpenActionsContactId(null)}
                 onDelete={() => confirmDelete(contact)}
                 onEdit={() => editContact(contact)}
                 onHistory={() => void openHistory(contact)}
+                onToggleActions={() => setOpenActionsContactId((current) => (current === contact.id ? null : contact.id))}
               />
             ))}
           </View>
@@ -372,26 +389,63 @@ export function ContactsScreen({ onBack, token }: Props) {
 }
 
 function ContactCard({
+  actionsOpen,
   contact,
   historyLoading,
+  isLast,
+  onCloseActions,
   onDelete,
   onEdit,
-  onHistory
+  onHistory,
+  onToggleActions
 }: {
+  actionsOpen: boolean;
   contact: Contact;
   historyLoading: boolean;
+  isLast: boolean;
+  onCloseActions: () => void;
   onDelete: () => void;
   onEdit: () => void;
   onHistory: () => void;
+  onToggleActions: () => void;
 }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [actionsProgress] = useState(() => new Animated.Value(actionsOpen ? 1 : 0));
   const name = contactName(contact.firstName, contact.lastName);
 
+  useEffect(() => {
+    Animated.timing(actionsProgress, {
+      duration: actionsOpen ? 190 : 150,
+      easing: actionsOpen ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
+      toValue: actionsOpen ? 1 : 0,
+      useNativeDriver: false
+    }).start();
+  }, [actionsOpen, actionsProgress]);
+
+  const actionsWidth = actionsProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, INLINE_ACTIONS_WIDTH]
+  });
+
+  const actionsTranslateX = actionsProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [18, 0]
+  });
+
+  const actionsScale = actionsProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.9, 1]
+  });
+
   return (
-    <View style={styles.contactCard}>
+    <View style={[styles.contactCard, isLast ? styles.contactCardLast : null]}>
       <Pressable
         delayLongPress={900}
-        onLongPress={() => setDetailsOpen(true)}
+        onLongPress={() => {
+          onCloseActions();
+          setDetailsOpen(true);
+        }}
+        onPress={onCloseActions}
         style={({ pressed }) => [styles.contactBodyButton, pressed ? styles.contactBodyButtonPressed : null]}
       >
         <View style={styles.contactTextBlock}>
@@ -401,36 +455,88 @@ function ContactCard({
         </View>
       </Pressable>
 
-      <View style={styles.cardActions}>
-        <Pressable
+      <Animated.View
+        pointerEvents={actionsOpen ? "auto" : "none"}
+        style={[
+          styles.inlineActions,
+          {
+            opacity: actionsProgress,
+            transform: [{ translateX: actionsTranslateX }, { scale: actionsScale }],
+            width: actionsWidth
+          }
+        ]}
+      >
+        <InlineContactAction
           accessibilityLabel="История контакта"
-          onPress={onHistory}
-          style={({ pressed }) => [styles.historyIconAction, pressed ? styles.iconActionPressed : null]}
-        >
-          {historyLoading ? (
-            <ActivityIndicator color={colors.primary} size="small" />
-          ) : (
-            <Feather color={colors.primary} name="clock" size={19} />
-          )}
-        </Pressable>
-        <Pressable
+          icon="clock"
+          loading={historyLoading}
+          onPress={() => {
+            onCloseActions();
+            onHistory();
+          }}
+        />
+        <InlineContactAction
           accessibilityLabel="Изменить контакт"
-          onPress={onEdit}
-          style={({ pressed }) => [styles.iconAction, pressed ? styles.iconActionPressed : null]}
-        >
-          <Feather color={colors.primary} name="edit-2" size={19} />
-        </Pressable>
-        <Pressable
+          icon="edit-2"
+          onPress={() => {
+            onCloseActions();
+            onEdit();
+          }}
+        />
+        <InlineContactAction
           accessibilityLabel="Удалить контакт"
-          onPress={onDelete}
-          style={({ pressed }) => [styles.deleteIconAction, pressed ? styles.deleteIconActionPressed : null]}
-        >
-          <Feather color={colors.danger} name="trash-2" size={19} />
-        </Pressable>
-      </View>
+          danger
+          icon="trash-2"
+          onPress={() => {
+            onCloseActions();
+            onDelete();
+          }}
+        />
+      </Animated.View>
+
+      <Pressable
+        accessibilityLabel={actionsOpen ? "Свернуть действия контакта" : "Действия контакта"}
+        onPress={onToggleActions}
+        style={({ pressed }) => [
+          styles.moreButton,
+          pressed ? styles.moreButtonPressed : null,
+          actionsOpen ? styles.moreButtonActive : null,
+          actionsOpen && pressed ? styles.moreButtonActivePressed : null
+        ]}
+      >
+        <Feather color={actionsOpen ? colors.surface : colors.primary} name="more-horizontal" size={22} />
+      </Pressable>
 
       <ContactDetailsModal contact={contact} onClose={() => setDetailsOpen(false)} visible={detailsOpen} />
     </View>
+  );
+}
+
+function InlineContactAction({
+  accessibilityLabel,
+  danger,
+  icon,
+  loading,
+  onPress
+}: {
+  accessibilityLabel: string;
+  danger?: boolean;
+  icon: FeatherIconName;
+  loading?: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.inlineActionButton,
+        danger ? styles.inlineActionButtonDanger : null,
+        pressed ? (danger ? styles.inlineActionButtonDangerPressed : styles.inlineActionButtonPressed) : null
+      ]}
+    >
+      {loading ? <ActivityIndicator color={colors.primary} size="small" /> : <Feather color={danger ? colors.danger : colors.primary} name={icon} size={18} />}
+    </Pressable>
   );
 }
 
@@ -593,19 +699,25 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs
   },
   contactsList: {
-    gap: spacing.sm
-  },
-  contactCard: {
-    alignItems: "center",
     borderColor: colors.border,
     borderRadius: 8,
     borderWidth: 1,
     backgroundColor: colors.surface,
+    overflow: "hidden"
+  },
+  contactCard: {
+    alignItems: "center",
+    borderColor: colors.border,
+    borderBottomWidth: 1,
+    backgroundColor: colors.surface,
     flexDirection: "row",
-    gap: spacing.sm,
-    minHeight: 68,
+    gap: spacing.xs,
+    minHeight: 48,
     paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs
+    paddingVertical: 2
+  },
+  contactCardLast: {
+    borderBottomWidth: 0
   },
   contactBodyButton: {
     alignItems: "center",
@@ -613,9 +725,10 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     gap: spacing.sm,
-    minHeight: 52,
+    minHeight: 42,
     minWidth: 0,
-    padding: spacing.xs
+    paddingHorizontal: 0,
+    paddingVertical: 3
   },
   contactBodyButtonPressed: {
     backgroundColor: "#F4FAFB"
@@ -630,15 +743,16 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     lineHeight: 21
   },
-  cardActions: {
+  inlineActions: {
     alignItems: "center",
     flexDirection: "row",
     gap: spacing.xs,
-    justifyContent: "flex-end"
+    justifyContent: "flex-end",
+    overflow: "hidden"
   },
-  historyIconAction: {
-    width: 38,
-    height: 38,
+  inlineActionButton: {
+    width: 34,
+    height: 34,
     alignItems: "center",
     justifyContent: "center",
     borderColor: "#BFE3E6",
@@ -646,32 +760,35 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "#EEF8F9"
   },
-  iconAction: {
-    width: 38,
-    height: 38,
-    alignItems: "center",
-    justifyContent: "center",
-    borderColor: colors.border,
-    borderRadius: 8,
-    borderWidth: 1,
-    backgroundColor: colors.surface
-  },
-  iconActionPressed: {
-    backgroundColor: "#F4FAFB",
-    transform: [{ scale: 0.96 }]
-  },
-  deleteIconAction: {
-    width: 38,
-    height: 38,
-    alignItems: "center",
-    justifyContent: "center",
+  inlineActionButtonDanger: {
     borderColor: "#F3C2BD",
-    borderRadius: 8,
-    borderWidth: 1,
     backgroundColor: "#FFF7F7"
   },
-  deleteIconActionPressed: {
+  inlineActionButtonPressed: {
+    backgroundColor: "#E1F4F6",
+    transform: [{ scale: 0.94 }]
+  },
+  inlineActionButtonDangerPressed: {
     backgroundColor: "#FFECEC",
+    transform: [{ scale: 0.94 }]
+  },
+  moreButton: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#F4FAFB"
+  },
+  moreButtonPressed: {
+    backgroundColor: "#EEF8F9",
+    transform: [{ scale: 0.96 }]
+  },
+  moreButtonActive: {
+    backgroundColor: colors.primary
+  },
+  moreButtonActivePressed: {
+    backgroundColor: colors.primaryPressed,
     transform: [{ scale: 0.96 }]
   },
   modalOverlay: {
