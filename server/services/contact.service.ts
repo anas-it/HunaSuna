@@ -11,7 +11,7 @@ import {
   resolvePagination,
   type PaginationInput
 } from "@/lib/pagination";
-import { normalizePhone } from "@/lib/phone";
+import { normalizePhone, normalizePhoneForSearch } from "@/lib/phone";
 import { writeSecurityLog } from "@/server/logs/security-log.service";
 import { recordListSelect } from "@/server/services/record.service";
 import { contactSchema } from "@/server/validators/contact.validator";
@@ -21,6 +21,10 @@ type ContactInput = {
   lastName: string;
   phone: string;
   whatsapp?: string;
+};
+
+type ContactFilters = PaginationInput & {
+  query?: string | null;
 };
 
 export type ContactListItem = {
@@ -39,16 +43,52 @@ const contactListSelect = {
   whatsapp: true
 } as const;
 
-function activeContactsWhere(userId: string) {
+function activeContactsWhere(userId: string, filters?: ContactFilters) {
+  const query = filters?.query?.trim();
+  const phoneQuery = query ? normalizePhoneForSearch(query) : "";
+  const phonePrefixConditions = phoneQuery
+    ? [
+        {
+          phone: {
+            startsWith: phoneQuery
+          }
+        },
+        {
+          phone: {
+            startsWith: `+${phoneQuery}`
+          }
+        }
+      ]
+    : [];
+
   return {
     userId,
-    deletedAt: null
+    deletedAt: null,
+    ...(query
+      ? {
+          OR: [
+            {
+              firstName: {
+                startsWith: query,
+                mode: "insensitive" as const
+              }
+            },
+            {
+              lastName: {
+                startsWith: query,
+                mode: "insensitive" as const
+              }
+            },
+            ...phonePrefixConditions
+          ]
+        }
+      : {})
   };
 }
 
 export async function listContacts(
   userId: string,
-  options?: PaginationInput
+  options?: ContactFilters
 ): Promise<ContactListItem[]> {
   const pagination = resolvePagination(
     {
@@ -60,7 +100,7 @@ export async function listContacts(
   );
 
   return prisma.contact.findMany({
-    where: activeContactsWhere(userId),
+    where: activeContactsWhere(userId, options),
     select: contactListSelect,
     orderBy: [
       {
@@ -77,14 +117,14 @@ export async function listContacts(
 
 export async function listContactsPage(
   userId: string,
-  options?: PaginationInput
+  options?: ContactFilters
 ) {
   const pagination = resolvePagination(
     options,
     CONTACTS_PAGE_SIZE,
     MAX_CONTACTS_PAGE_SIZE
   );
-  const where = activeContactsWhere(userId);
+  const where = activeContactsWhere(userId, options);
   const [contacts, total] = await prisma.$transaction([
     prisma.contact.findMany({
       where,

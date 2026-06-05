@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
-import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { saveRecord, type Contact, type RecordDetail, type RecordInput } from "../api/hunasuna";
+import { useEffect, useState } from "react";
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { saveRecord, searchContacts, type Contact, type RecordDetail, type RecordInput } from "../api/hunasuna";
 import { colors, spacing } from "../styles/theme";
 import { contactName } from "../utils/format";
 import { ActionButton, Message, TextField } from "./FormControls";
@@ -128,15 +128,15 @@ export function RecordEditor({ contacts, initialRecord, onCancel, onSaved, submi
 
   return (
     <View style={styles.form}>
-      <PersonEditor contacts={contacts} label="От кого" person={sender} setPerson={setSender} />
-      <PersonEditor contacts={contacts} label="Кому" person={receiver} setPerson={setReceiver} />
+      <PersonEditor contacts={contacts} label="От кого" person={sender} setPerson={setSender} token={token} />
+      <PersonEditor contacts={contacts} label="Кому" person={receiver} setPerson={setReceiver} token={token} />
 
       <View style={styles.moneyGrid}>
         <View style={styles.moneyItem}>
-          <TextField keyboardType="numeric" label="Сумма" onChangeText={setAmount} placeholder="Сумма" value={amount} />
+          <TextField keyboardType="numeric" onChangeText={setAmount} placeholder="Сумма" value={amount} />
         </View>
         <View style={styles.moneyItem}>
-          <TextField keyboardType="numeric" label="Курс" onChangeText={setRate} placeholder="Курс" value={rate} />
+          <TextField keyboardType="numeric" onChangeText={setRate} placeholder="Курс" value={rate} />
         </View>
       </View>
 
@@ -179,12 +179,14 @@ function PersonEditor({
   contacts,
   label,
   person,
-  setPerson
+  setPerson,
+  token
 }: {
   contacts: Contact[];
   label: string;
   person: PersonState;
   setPerson: (person: PersonState) => void;
+  token: string;
 }) {
   const [pickerVisible, setPickerVisible] = useState(false);
   const isManual = person.contactId === "manual";
@@ -223,7 +225,6 @@ function PersonEditor({
           <View style={styles.nameItem}>
             <TextField
               editable={isManual}
-              label="Имя"
               onChangeText={(value) => setPerson({ ...person, firstName: value })}
               placeholder="Имя"
               value={person.firstName}
@@ -232,7 +233,6 @@ function PersonEditor({
           <View style={styles.nameItem}>
             <TextField
               editable={isManual}
-              label="Фамилия"
               onChangeText={(value) => setPerson({ ...person, lastName: value })}
               placeholder="Фамилия"
               value={person.lastName}
@@ -242,7 +242,6 @@ function PersonEditor({
         <TextField
           editable={isManual}
           keyboardType="phone-pad"
-          label="Телефон"
           onChangeText={(value) => setPerson({ ...person, phone: value })}
           placeholder="Телефон"
           value={person.phone}
@@ -254,6 +253,7 @@ function PersonEditor({
         onClose={() => setPickerVisible(false)}
         onSelect={selectContact}
         selectedContactId={person.contactId}
+        token={token}
         visible={pickerVisible}
       />
     </View>
@@ -265,34 +265,88 @@ function ContactPickerModal({
   onClose,
   onSelect,
   selectedContactId,
+  token,
   visible
 }: {
   contacts: Contact[];
   onClose: () => void;
   onSelect: (contact: Contact) => void;
   selectedContactId: string;
+  token: string;
   visible: boolean;
 }) {
+  const [query, setQuery] = useState("");
+  const [remoteContacts, setRemoteContacts] = useState<Contact[]>([]);
+  const normalizedQuery = query.trim();
+  const visibleContacts = normalizedQuery ? remoteContacts : contacts;
+
+  function closePicker() {
+    setQuery("");
+    onClose();
+  }
+
+  useEffect(() => {
+    if (!visible || !normalizedQuery) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const timer = setTimeout(() => {
+      searchContacts(token, normalizedQuery, 20)
+        .then((result) => {
+          if (!cancelled) {
+            setRemoteContacts(result.contacts);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setRemoteContacts([]);
+          }
+        })
+    }, 180);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [normalizedQuery, token, visible]);
+
   return (
-    <Modal animationType="fade" onRequestClose={onClose} transparent visible={visible}>
+    <Modal animationType="fade" onRequestClose={closePicker} transparent visible={visible}>
       <View style={styles.modalBackdrop}>
         <View style={styles.modalCard}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Выберите контакт</Text>
-            <Pressable onPress={onClose} style={styles.modalCloseButton}>
+            <Pressable onPress={closePicker} style={styles.modalCloseButton}>
               <Feather color={colors.muted} name="x" size={20} />
             </Pressable>
           </View>
 
-          {contacts.length ? (
+          <View style={styles.modalSearchBox}>
+            <Feather color={colors.muted} name="search" size={18} />
+            <TextInput
+              autoCapitalize="none"
+              onChangeText={setQuery}
+              placeholder="Имя или номер"
+              placeholderTextColor={colors.muted}
+              style={styles.modalSearchInput}
+              value={query}
+            />
+          </View>
+
+          {visibleContacts.length ? (
             <ScrollView contentContainerStyle={styles.contactList} showsVerticalScrollIndicator={false}>
-              {contacts.map((contact) => {
+              {visibleContacts.map((contact) => {
                 const selected = selectedContactId === contact.id;
 
                 return (
                   <Pressable
                     key={contact.id}
-                    onPress={() => onSelect(contact)}
+                    onPress={() => {
+                      setQuery("");
+                      onSelect(contact);
+                    }}
                     style={[styles.contactOption, selected ? styles.contactOptionSelected : null]}
                   >
                     <View style={styles.contactOptionTextBlock}>
@@ -307,7 +361,7 @@ function ContactPickerModal({
           ) : (
             <View style={styles.noContactsBox}>
               <Feather color={colors.muted} name="users" size={24} />
-              <Text style={styles.noContactsText}>Контактов пока нет</Text>
+              <Text style={styles.noContactsText}>{normalizedQuery ? "Контакт не найден" : "Контактов пока нет"}</Text>
             </View>
           )}
         </View>
@@ -468,6 +522,25 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 18,
     fontWeight: "700"
+  },
+  modalSearchBox: {
+    minHeight: 46,
+    alignItems: "center",
+    borderColor: colors.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: colors.surface,
+    flexDirection: "row",
+    gap: spacing.xs,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.sm
+  },
+  modalSearchInput: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 15,
+    minHeight: 44,
+    paddingVertical: 0
   },
   modalCloseButton: {
     width: 40,

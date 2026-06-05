@@ -29,6 +29,13 @@ type MessageProps = {
   tone?: "error" | "success" | "muted";
 };
 
+type PaginationLike = {
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  page: number;
+  totalPages: number;
+};
+
 export function TextField({
   autoCapitalize,
   editable = true,
@@ -104,6 +111,52 @@ export function EmptyState({ icon = "inbox", text }: { icon?: keyof typeof Feath
     <View style={styles.emptyState}>
       <Feather color={colors.muted} name={icon} size={26} />
       <Text style={styles.emptyText}>{text}</Text>
+    </View>
+  );
+}
+
+export function PaginationControls({
+  disabled,
+  onPageChange,
+  pagination
+}: {
+  disabled?: boolean;
+  onPageChange: (page: number) => void;
+  pagination: PaginationLike | null;
+}) {
+  if (!pagination || pagination.totalPages <= 1) {
+    return null;
+  }
+
+  return (
+    <View style={styles.pagination}>
+      <Pressable
+        disabled={disabled || !pagination.hasPreviousPage}
+        onPress={() => onPageChange(pagination.page - 1)}
+        style={({ pressed }) => [
+          styles.pageButton,
+          pressed ? styles.pageButtonPressed : null,
+          disabled || !pagination.hasPreviousPage ? styles.pageButtonDisabled : null
+        ]}
+      >
+        <Feather color={colors.primary} name="chevron-left" size={18} />
+        <Text style={styles.pageButtonText}>Назад</Text>
+      </Pressable>
+      <Text style={styles.pageText}>
+        {pagination.page} / {pagination.totalPages}
+      </Text>
+      <Pressable
+        disabled={disabled || !pagination.hasNextPage}
+        onPress={() => onPageChange(pagination.page + 1)}
+        style={({ pressed }) => [
+          styles.pageButton,
+          pressed ? styles.pageButtonPressed : null,
+          disabled || !pagination.hasNextPage ? styles.pageButtonDisabled : null
+        ]}
+      >
+        <Text style={styles.pageButtonText}>Дальше</Text>
+        <Feather color={colors.primary} name="chevron-right" size={18} />
+      </Pressable>
     </View>
   );
 }
@@ -205,6 +258,43 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     lineHeight: 21,
     textAlign: "center"
+  },
+  pagination: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+    justifyContent: "space-between",
+    marginTop: spacing.xs
+  },
+  pageButton: {
+    minHeight: 40,
+    alignItems: "center",
+    borderColor: colors.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    backgroundColor: colors.surface,
+    flexDirection: "row",
+    gap: 2,
+    justifyContent: "center",
+    minWidth: 106,
+    paddingHorizontal: spacing.sm
+  },
+  pageButtonPressed: {
+    borderColor: colors.primary,
+    backgroundColor: "#EEF8F9"
+  },
+  pageButtonDisabled: {
+    opacity: 0.42
+  },
+  pageButtonText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: "800"
+  },
+  pageText: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: "800"
   }
 });
 

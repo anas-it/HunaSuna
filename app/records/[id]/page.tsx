@@ -3,7 +3,6 @@ import { Notice } from "@/components/layout/notice";
 import { PageShell } from "@/components/layout/page-shell";
 import { RecordActions } from "@/components/records/record-actions";
 import { RecordForm } from "@/components/records/record-form";
-import { formatDateTime } from "@/lib/format";
 import { requirePageUser } from "@/server/auth/session";
 import { listContacts } from "@/server/services/contact.service";
 import { getRecord } from "@/server/services/record.service";
@@ -23,10 +22,7 @@ export default async function RecordPage({ params, searchParams }: RecordPagePro
   ]);
 
   return (
-    <PageShell
-      title="Запись"
-      description={`Создана: ${formatDateTime(record.createdAt)}. Часовой пояс: ${record.timezone}.`}
-    >
+    <PageShell title="Запись">
       <Notice error={query.error} message={query.message} />
 
       {record.deletedAt ? (

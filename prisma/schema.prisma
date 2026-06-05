@@ -82,10 +82,12 @@ model Record {
   senderFirstNameSnapshot    String?
   senderLastNameSnapshot     String?
   senderPhoneSnapshot        String?
+  senderPhoneSearch          String?
   receiverContactId          String?
   receiverFirstNameSnapshot  String?
   receiverLastNameSnapshot   String?
   receiverPhoneSnapshot      String?
+  receiverPhoneSearch        String?
   amount                     String
   currency                   String
   rate                       String
@@ -111,6 +113,8 @@ model Record {
   @@index([receiverContactId])
   @@index([senderPhoneSnapshot])
   @@index([receiverPhoneSnapshot])
+  @@index([senderPhoneSearch])
+  @@index([receiverPhoneSearch])
 }
 
 model SecurityLog {

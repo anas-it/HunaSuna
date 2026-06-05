@@ -2,18 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 
 const allowedOrigins = new Set([
   "http://localhost:8081",
-  "http://127.0.0.1:8081",
-  "http://192.168.31.93:8081"
+  "http://127.0.0.1:8081"
 ]);
+
+const expoDevOriginPattern =
+  /^http:\/\/(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}):(8081|19006)$/;
+
+function isAllowedOrigin(origin: string) {
+  return allowedOrigins.has(origin) || expoDevOriginPattern.test(origin);
+}
 
 function corsHeaders(origin: string | null) {
   const headers = new Headers();
 
   headers.set("Vary", "Origin");
   headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
-  headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-HunaSuna-Client");
+  headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-HunaSuna-Client, X-HunaSuna-Timezone");
 
-  if (origin && allowedOrigins.has(origin)) {
+  if (origin && isAllowedOrigin(origin)) {
     headers.set("Access-Control-Allow-Origin", origin);
     headers.set("Access-Control-Allow-Credentials", "true");
   }

@@ -13,12 +13,14 @@ import {
   type TextStyle,
   View
 } from "react-native";
-import { listRecords, type RecordListItem } from "../api/hunasuna";
+import { listRecords, searchContacts, type Contact, type RecordListItem } from "../api/hunasuna";
+import { ContactSuggestions } from "../components/ContactSuggestions";
 import { EmptyState, Message } from "../components/FormControls";
 import { RecordCard } from "../components/RecordCard";
 import { colors, spacing } from "../styles/theme";
 import type { ApiUser } from "../types/api";
 import type { AppSection } from "../types/navigation";
+import { contactName } from "../utils/format";
 
 type Props = {
   user: ApiUser;
@@ -30,6 +32,7 @@ type Props = {
 export function HomeScreen({ user, onOpenSection, onSearch, token }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [contactSuggestions, setContactSuggestions] = useState<Contact[]>([]);
   const [records, setRecords] = useState<RecordListItem[]>([]);
   const [recordsLoading, setRecordsLoading] = useState(true);
   const [recordsError, setRecordsError] = useState<string | null>(null);
@@ -65,9 +68,45 @@ export function HomeScreen({ user, onOpenSection, onSearch, token }: Props) {
     };
   }, [token]);
 
+  useEffect(() => {
+    const normalizedQuery = searchQuery.trim();
+
+    if (!normalizedQuery) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const timer = setTimeout(() => {
+      searchContacts(token, normalizedQuery)
+        .then((result) => {
+          if (!cancelled) {
+            setContactSuggestions(result.contacts);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setContactSuggestions([]);
+          }
+        })
+    }, 180);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [searchQuery, token]);
+
   function submitSearch() {
     Keyboard.dismiss();
     onSearch(searchQuery);
+  }
+
+  function selectContactSuggestion(contact: Contact) {
+    const value = contactName(contact.firstName, contact.lastName) || contact.phone;
+    setSearchQuery(value);
+    setContactSuggestions([]);
+    onSearch(value);
   }
 
   return (
@@ -100,6 +139,11 @@ export function HomeScreen({ user, onOpenSection, onSearch, token }: Props) {
             ) : null}
             <SearchArrowButton onPress={submitSearch} />
           </View>
+          <ContactSuggestions
+            contacts={contactSuggestions}
+            onSelect={selectContactSuggestion}
+            visible={Boolean(searchQuery.trim())}
+          />
         </View>
 
         <View style={styles.recordsSection}>

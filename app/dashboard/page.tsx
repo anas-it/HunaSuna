@@ -11,10 +11,7 @@ export default async function DashboardPage() {
     await getDashboardSummary(user.id);
 
   return (
-    <PageShell
-      title="Главная"
-      description={`Добро пожаловать: ${user.login}`}
-    >
+    <PageShell title="Главная">
       <div className="mb-6 flex flex-wrap justify-end gap-3">
         <Button asChild variant="secondary">
           <Link href="/contacts">Контакты</Link>

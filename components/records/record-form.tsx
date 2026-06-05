@@ -176,10 +176,12 @@ export function RecordForm({
   );
   const [sender, setSender] = useState(initialSender);
   const [receiver, setReceiver] = useState(initialReceiver);
+  const timezone = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone, []);
 
   return (
     <div className="grid gap-5 rounded-lg border border-[#d8dee8] bg-white p-6">
       <SingleSubmitForm action={action} className="grid gap-5" id={formId}>
+        <input name="timezone" type="hidden" value={timezone} />
         <div className="grid gap-5 md:grid-cols-2">
           <PersonFieldset
             contacts={contacts}

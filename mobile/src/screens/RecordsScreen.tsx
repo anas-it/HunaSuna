@@ -6,16 +6,21 @@ import {
   getRecord,
   listContacts,
   listRecords,
+  searchContacts,
   searchRecords,
+  searchRecordsByContact,
   type Contact,
+  type PaginationMeta,
   type RecordDetail,
   type RecordListItem
 } from "../api/hunasuna";
-import { EmptyState, Message } from "../components/FormControls";
+import { ContactSuggestions } from "../components/ContactSuggestions";
+import { EmptyState, Message, PaginationControls } from "../components/FormControls";
 import { RecordCard } from "../components/RecordCard";
 import { RecordEditor } from "../components/RecordEditor";
 import { ScreenLayout } from "../components/ScreenLayout";
 import { colors, spacing } from "../styles/theme";
+import { contactName } from "../utils/format";
 
 type Props = {
   highlightedRecordId?: string | null;
@@ -28,12 +33,16 @@ type SortMode = "alpha" | "date";
 export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId = null, onBack, token }: Props) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [records, setRecords] = useState<RecordListItem[]>([]);
+  const [pagination, setPagination] = useState<PaginationMeta | null>(null);
   const [editingRecord, setEditingRecord] = useState<RecordDetail | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchActive, setSearchActive] = useState(false);
+  const [selectedContactId, setSelectedContactId] = useState<string | null>(null);
+  const [contactSuggestions, setContactSuggestions] = useState<Contact[]>([]);
   const [sortMode, setSortMode] = useState<SortMode>("date");
+  const [page, setPage] = useState(1);
   const [highlightedRecordId, setHighlightedRecordId] = useState<string | null>(initialHighlightedRecordId);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -57,7 +66,9 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
     return nextRecords.sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime());
   }, [records, sortMode]);
 
-  async function loadData(isRefresh = false, options?: { forceList?: boolean }) {
+  async function loadData(isRefresh = false, options?: { forceList?: boolean; page?: number }) {
+    const nextPage = options?.page ?? page;
+
     if (isRefresh) {
       setRefreshing(true);
     } else {
@@ -68,10 +79,18 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
 
     try {
       const normalizedQuery = searchQuery.trim();
-      const recordsRequest = !options?.forceList && searchActive && normalizedQuery ? searchRecords(token, normalizedQuery) : listRecords(token);
+      const recordsRequest = !options?.forceList && searchActive
+        ? selectedContactId
+          ? searchRecordsByContact(token, selectedContactId, nextPage)
+          : normalizedQuery
+            ? searchRecords(token, normalizedQuery, nextPage)
+            : listRecords(token, nextPage)
+        : listRecords(token, nextPage);
       const [contactsResult, recordsResult] = await Promise.all([listContacts(token), recordsRequest]);
       setContacts(contactsResult.contacts);
       setRecords(recordsResult.records);
+      setPagination(recordsResult.pagination);
+      setPage(recordsResult.pagination.page);
     } catch (error) {
       setMessageTone("error");
       setMessage(error instanceof Error ? error.message : "Не удалось загрузить записи");
@@ -89,11 +108,13 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
       setMessage(null);
 
       try {
-        const [contactsResult, recordsResult] = await Promise.all([listContacts(token), listRecords(token)]);
+        const [contactsResult, recordsResult] = await Promise.all([listContacts(token), listRecords(token, 1)]);
 
         if (!cancelled) {
           setContacts(contactsResult.contacts);
           setRecords(recordsResult.records);
+          setPagination(recordsResult.pagination);
+          setPage(recordsResult.pagination.page);
         }
       } catch (error) {
         if (!cancelled) {
@@ -113,6 +134,35 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
       cancelled = true;
     };
   }, [token]);
+
+  useEffect(() => {
+    const normalizedQuery = searchQuery.trim();
+
+    if (!searchOpen || !listVisible || !normalizedQuery || selectedContactId) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const timer = setTimeout(() => {
+      searchContacts(token, normalizedQuery)
+        .then((result) => {
+          if (!cancelled) {
+            setContactSuggestions(result.contacts);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setContactSuggestions([]);
+          }
+        });
+    }, 180);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [listVisible, searchOpen, searchQuery, selectedContactId, token]);
 
   async function beginEdit(recordId: string) {
     setActionLoadingId(recordId);
@@ -161,13 +211,16 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
     ]);
   }
 
-  async function submitSearch() {
-    const normalizedQuery = searchQuery.trim();
+  async function runSearch(rawQuery: string, nextPage = 1, contactId?: string | null) {
+    const normalizedQuery = rawQuery.trim();
     Keyboard.dismiss();
 
-    if (!normalizedQuery) {
+    if (!normalizedQuery && !contactId) {
       setSearchActive(false);
-      await loadData(true, { forceList: true });
+      setSelectedContactId(null);
+      setContactSuggestions([]);
+      setPage(1);
+      await loadData(true, { forceList: true, page: 1 });
       return;
     }
 
@@ -175,9 +228,15 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
     setMessage(null);
 
     try {
-      const result = await searchRecords(token, normalizedQuery);
+      const result = contactId
+        ? await searchRecordsByContact(token, contactId, nextPage)
+        : await searchRecords(token, normalizedQuery, nextPage);
       setRecords(result.records);
+      setPagination(result.pagination);
+      setPage(result.pagination.page);
       setSearchActive(true);
+      setSelectedContactId(contactId ?? null);
+      setContactSuggestions([]);
     } catch (error) {
       setMessageTone("error");
       setMessage(error instanceof Error ? error.message : "Не удалось выполнить поиск");
@@ -186,10 +245,38 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
     }
   }
 
+  async function submitSearch() {
+    await runSearch(searchQuery, 1);
+  }
+
   async function clearSearch() {
     setSearchQuery("");
     setSearchActive(false);
-    await loadData(true, { forceList: true });
+    setSelectedContactId(null);
+    setContactSuggestions([]);
+    setPage(1);
+    await loadData(true, { forceList: true, page: 1 });
+  }
+
+  function updateSearchQuery(value: string) {
+    setSearchQuery(value);
+    setSelectedContactId(null);
+  }
+
+  function selectContactSuggestion(contact: Contact) {
+    const value = contactName(contact.firstName, contact.lastName) || contact.phone;
+    setSearchQuery(value);
+    setContactSuggestions([]);
+    void runSearch(value, 1, contact.id);
+  }
+
+  function changePage(nextPage: number) {
+    if (searchActive) {
+      void runSearch(searchQuery, nextPage, selectedContactId);
+      return;
+    }
+
+    void loadData(true, { forceList: true, page: nextPage });
   }
 
   return (
@@ -221,26 +308,33 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
         ) : null}
 
         {searchOpen && listVisible ? (
-          <View style={styles.searchBox}>
-            <Feather color={colors.muted} name="search" size={20} />
-            <TextInput
-              autoCapitalize="none"
-              onChangeText={setSearchQuery}
-              onSubmitEditing={() => void submitSearch()}
-              placeholder="Имя, фамилия или номер"
-              placeholderTextColor={colors.muted}
-              returnKeyType="search"
-              style={[styles.searchInput, webInputReset]}
-              value={searchQuery}
-            />
-            {searchQuery ? (
-              <Pressable onPress={() => void clearSearch()} style={styles.searchClear}>
-                <Feather color={colors.muted} name="x" size={18} />
+          <View style={styles.searchStack}>
+            <View style={styles.searchBox}>
+              <Feather color={colors.muted} name="search" size={20} />
+              <TextInput
+                autoCapitalize="none"
+                onChangeText={updateSearchQuery}
+                onSubmitEditing={() => void submitSearch()}
+                placeholder="Имя, фамилия или номер"
+                placeholderTextColor={colors.muted}
+                returnKeyType="search"
+                style={[styles.searchInput, webInputReset]}
+                value={searchQuery}
+              />
+              {searchQuery ? (
+                <Pressable onPress={() => void clearSearch()} style={styles.searchClear}>
+                  <Feather color={colors.muted} name="x" size={18} />
+                </Pressable>
+              ) : null}
+              <Pressable disabled={searching} onPress={() => void submitSearch()} style={styles.searchSubmit}>
+                {searching ? <ActivityIndicator color={colors.surface} size="small" /> : <Feather color={colors.surface} name="arrow-right" size={20} />}
               </Pressable>
-            ) : null}
-            <Pressable disabled={searching} onPress={() => void submitSearch()} style={styles.searchSubmit}>
-              {searching ? <ActivityIndicator color={colors.surface} size="small" /> : <Feather color={colors.surface} name="arrow-right" size={20} />}
-            </Pressable>
+            </View>
+            <ContactSuggestions
+              contacts={contactSuggestions}
+              onSelect={selectContactSuggestion}
+              visible={Boolean(searchQuery.trim() && contactSuggestions.length)}
+            />
           </View>
         ) : null}
 
@@ -320,6 +414,10 @@ export function RecordsScreen({ highlightedRecordId: initialHighlightedRecordId 
             }
           />
         )) : null}
+
+        {!loading && listVisible ? (
+          <PaginationControls disabled={refreshing || searching} onPageChange={changePage} pagination={pagination} />
+        ) : null}
       </View>
     </ScreenLayout>
   );
@@ -406,6 +504,9 @@ const styles = StyleSheet.create({
   searchTogglePressed: {
     borderColor: colors.primary,
     backgroundColor: "#E1F3F5"
+  },
+  searchStack: {
+    gap: spacing.xs
   },
   searchBox: {
     minHeight: 54,

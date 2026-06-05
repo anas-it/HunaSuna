@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const result = await listContactsPage(user.id, {
+    query: searchParams.get("query"),
     page: searchParams.get("page"),
     limit: searchParams.get("limit")
   });

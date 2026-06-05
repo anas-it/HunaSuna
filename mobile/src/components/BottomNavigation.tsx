@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useState } from "react";
-import { Animated, Pressable, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, SafeAreaView, StyleSheet, View } from "react-native";
 import { colors, spacing } from "../styles/theme";
 import type { AppSection } from "../types/navigation";
 
@@ -92,6 +92,7 @@ function NavButton({ active, icon, label, onSelect, section }: NavButtonProps) {
 
   return (
     <Pressable
+      accessibilityLabel={label.replace("\n", " ")}
       onPress={() => onSelect(section)}
       onPressIn={() => animate(0.9, 2)}
       onPressOut={() => animate(1, 0)}
@@ -109,9 +110,6 @@ function NavButton({ active, icon, label, onSelect, section }: NavButtonProps) {
           <Feather color={iconColor} name={icon} size={31} />
         </View>
       </Animated.View>
-      <Text numberOfLines={2} style={[styles.label, active ? styles.labelActive : null]}>
-        {label}
-      </Text>
     </Pressable>
   );
 }
@@ -121,7 +119,7 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent"
   },
   bar: {
-    minHeight: 88,
+    minHeight: 68,
     alignItems: "flex-start",
     backgroundColor: "transparent",
     flexDirection: "row",
@@ -131,7 +129,7 @@ const styles = StyleSheet.create({
   },
   item: {
     flex: 1,
-    minHeight: 78,
+    minHeight: 58,
     alignItems: "center",
     justifyContent: "flex-start",
     borderRadius: 8,
@@ -160,15 +158,4 @@ const styles = StyleSheet.create({
   createIconBoxActive: {
     borderColor: colors.primary
   },
-  label: {
-    color: colors.icon,
-    fontSize: 10,
-    fontWeight: "700",
-    lineHeight: 12,
-    marginTop: spacing.xs,
-    textAlign: "center"
-  },
-  labelActive: {
-    color: colors.primary
-  }
 });

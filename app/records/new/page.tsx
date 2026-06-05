@@ -15,13 +15,9 @@ export default async function NewRecordPage({ searchParams }: NewRecordPageProps
   const contacts = await listContacts(user.id);
 
   return (
-    <PageShell
-      title="Создать запись"
-      description="Выберите контакт или введите данные вручную. Номер при ручном вводе необязателен."
-    >
+    <PageShell title="Создать запись">
       <Notice error={params.error} />
       <RecordForm action={createRecordAction} contacts={contacts} submitLabel="Сохранить запись" />
     </PageShell>
   );
 }
-

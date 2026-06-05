@@ -1,6 +1,9 @@
 import { apiRequest } from "./client";
 import type { ApiUser } from "../types/api";
 
+export const RECORDS_PAGE_LIMIT = 15;
+export const CONTACT_SUGGESTIONS_LIMIT = 6;
+
 export type PaginationMeta = {
   page: number;
   limit: number;
@@ -72,11 +75,18 @@ export type SensitiveData = {
   phone: string | null;
 };
 
-export async function listContacts(token: string) {
+export async function listContacts(token: string, page = 1, limit = 100) {
   return apiRequest<{
     contacts: Contact[];
     pagination: PaginationMeta;
-  }>("/api/contacts?limit=100", { token });
+  }>(`/api/contacts?page=${page}&limit=${limit}`, { token });
+}
+
+export async function searchContacts(token: string, query: string, limit = CONTACT_SUGGESTIONS_LIMIT) {
+  return apiRequest<{
+    contacts: Contact[];
+    pagination: PaginationMeta;
+  }>(`/api/contacts?query=${encodeURIComponent(query)}&limit=${limit}`, { token });
 }
 
 export async function saveContact(token: string, input: ContactInput, contactId?: string) {
@@ -94,19 +104,19 @@ export async function deleteContact(token: string, contactId: string) {
   });
 }
 
-export async function getContactHistory(token: string, contactId: string) {
+export async function getContactHistory(token: string, contactId: string, page = 1, limit = RECORDS_PAGE_LIMIT) {
   return apiRequest<{
     contact: Contact;
     records: RecordListItem[];
     pagination: PaginationMeta;
-  }>(`/api/contacts/${contactId}?limit=25`, { token });
+  }>(`/api/contacts/${contactId}?page=${page}&limit=${limit}`, { token });
 }
 
-export async function listRecords(token: string) {
+export async function listRecords(token: string, page = 1, limit = RECORDS_PAGE_LIMIT) {
   return apiRequest<{
     records: RecordListItem[];
     pagination: PaginationMeta;
-  }>("/api/records?limit=25", { token });
+  }>(`/api/records?page=${page}&limit=${limit}`, { token });
 }
 
 export async function getRecord(token: string, recordId: string) {
@@ -128,18 +138,25 @@ export async function deleteRecord(token: string, recordId: string) {
   });
 }
 
-export async function searchRecords(token: string, query: string) {
+export async function searchRecords(token: string, query: string, page = 1, limit = RECORDS_PAGE_LIMIT) {
   return apiRequest<{
     records: RecordListItem[];
     pagination: PaginationMeta;
-  }>(`/api/search?query=${encodeURIComponent(query)}&limit=25`, { token });
+  }>(`/api/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`, { token });
 }
 
-export async function listDeletedRecords(token: string) {
+export async function searchRecordsByContact(token: string, contactId: string, page = 1, limit = RECORDS_PAGE_LIMIT) {
   return apiRequest<{
     records: RecordListItem[];
     pagination: PaginationMeta;
-  }>("/api/deleted-records?limit=25", { token });
+  }>(`/api/search?contactId=${encodeURIComponent(contactId)}&page=${page}&limit=${limit}`, { token });
+}
+
+export async function listDeletedRecords(token: string, page = 1, limit = RECORDS_PAGE_LIMIT) {
+  return apiRequest<{
+    records: RecordListItem[];
+    pagination: PaginationMeta;
+  }>(`/api/deleted-records?page=${page}&limit=${limit}`, { token });
 }
 
 export async function restoreDeletedRecord(token: string, recordId: string) {

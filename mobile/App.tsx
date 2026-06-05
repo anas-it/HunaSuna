@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { apiRequest } from "./src/api/client";
+import { apiRequest, setUnauthorizedHandler } from "./src/api/client";
 import { clearMobileSession, loadMobileSession } from "./src/auth/session-store";
 import { BottomNavigation } from "./src/components/BottomNavigation";
 import { AuthScreen } from "./src/screens/AuthScreen";
@@ -19,6 +19,20 @@ export default function App() {
   const [initialSearchQuery, setInitialSearchQuery] = useState("");
   const [highlightedRecordId, setHighlightedRecordId] = useState<string | null>(null);
   const [bootError, setBootError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setUnauthorizedHandler(async () => {
+      await clearMobileSession();
+      setSession(null);
+      setUser(null);
+      setActiveSection(null);
+      setInitialSearchQuery("");
+      setHighlightedRecordId(null);
+      setBootError("Сессия завершена. Войдите снова.");
+    });
+
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   useEffect(() => {
     async function bootstrap() {

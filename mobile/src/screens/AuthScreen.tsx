@@ -13,7 +13,6 @@ import {
   StyleSheet,
   Text,
   TextInput,
-  TouchableWithoutFeedback,
   View
 } from "react-native";
 import logoSource from "../../assets/hunasuna-auth-logo.png";
@@ -177,14 +176,13 @@ export function AuthScreen({ onAuthenticated }: Props) {
         keyboardVerticalOffset={Platform.OS === "ios" ? 12 : 0}
         style={styles.keyboardView}
       >
-        <TouchableWithoutFeedback accessible={false} onPress={Keyboard.dismiss}>
-          <ScrollView
-            contentContainerStyle={[styles.scrollContent, keyboardVisible ? styles.scrollContentKeyboard : null]}
-            keyboardDismissMode="interactive"
-            keyboardShouldPersistTaps="handled"
-            ref={scrollRef}
-            showsVerticalScrollIndicator={false}
-          >
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, keyboardVisible ? styles.scrollContentKeyboard : null]}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="always"
+          ref={scrollRef}
+          showsVerticalScrollIndicator={false}
+        >
             <View style={[styles.header, keyboardVisible ? styles.headerKeyboard : null]}>
               <AnimatedBrand compact={keyboardVisible} />
             </View>
@@ -322,8 +320,7 @@ export function AuthScreen({ onAuthenticated }: Props) {
                 )}
               </Pressable>
             </View>
-          </ScrollView>
-        </TouchableWithoutFeedback>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

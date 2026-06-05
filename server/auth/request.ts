@@ -1,5 +1,18 @@
 import { headers } from "next/headers";
 
+function validTimezone(value: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    new Intl.DateTimeFormat("ru-RU", { timeZone: value }).format(new Date());
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 export async function getRequestMeta() {
   const headerStore = await headers();
 
@@ -10,8 +23,9 @@ export async function getRequestMeta() {
     "127.0.0.1";
 
   const timezone =
-    headerStore.get("x-vercel-ip-timezone") ??
-    headerStore.get("cf-timezone") ??
+    validTimezone(headerStore.get("x-hunasuna-timezone")) ??
+    validTimezone(headerStore.get("x-vercel-ip-timezone")) ??
+    validTimezone(headerStore.get("cf-timezone")) ??
     Intl.DateTimeFormat().resolvedOptions().timeZone ??
     "UTC";
 
@@ -21,4 +35,3 @@ export async function getRequestMeta() {
     userAgent: headerStore.get("user-agent") ?? undefined
   };
 }
-

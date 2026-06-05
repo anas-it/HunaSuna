@@ -9,6 +9,7 @@ import {
   createPaginationMeta,
   resolvePagination
 } from "@/lib/pagination";
+import { normalizePhoneForSearch } from "@/lib/phone";
 import { prisma } from "@/server/db/prisma";
 import { writeSecurityLog } from "@/server/logs/security-log.service";
 import { recordSchema } from "@/server/validators/record.validator";
@@ -35,6 +36,56 @@ type RecordFilters = {
   contactId?: string;
   phone?: string;
 };
+
+function namePairConditions(
+  firstNameField: "senderFirstNameSnapshot" | "receiverFirstNameSnapshot",
+  lastNameField: "senderLastNameSnapshot" | "receiverLastNameSnapshot",
+  query: string
+) {
+  const parts = query.split(/\s+/).filter(Boolean);
+
+  if (parts.length < 2) {
+    return [];
+  }
+
+  const firstPart = parts[0];
+  const secondPart = parts.slice(1).join(" ");
+
+  return [
+    {
+      AND: [
+        {
+          [firstNameField]: {
+            startsWith: firstPart,
+            mode: "insensitive" as const
+          }
+        },
+        {
+          [lastNameField]: {
+            startsWith: secondPart,
+            mode: "insensitive" as const
+          }
+        }
+      ]
+    },
+    {
+      AND: [
+        {
+          [firstNameField]: {
+            startsWith: secondPart,
+            mode: "insensitive" as const
+          }
+        },
+        {
+          [lastNameField]: {
+            startsWith: firstPart,
+            mode: "insensitive" as const
+          }
+        }
+      ]
+    }
+  ] satisfies Prisma.RecordWhereInput[];
+}
 
 export const recordListSelect = {
   id: true,
@@ -74,7 +125,8 @@ async function resolvePerson(userId: string, person: PersonInput) {
       contactId: contact.id,
       firstName: contact.firstName,
       lastName: contact.lastName,
-      phone: contact.phone
+      phone: contact.phone,
+      phoneSearch: normalizePhoneForSearch(contact.phone) || null
     };
   }
 
@@ -85,11 +137,14 @@ async function resolvePerson(userId: string, person: PersonInput) {
     throw new Error("Для ручного ввода укажите имя и фамилию");
   }
 
+  const phone = person.phone?.trim() || null;
+
   return {
     contactId: null,
     firstName,
     lastName,
-    phone: person.phone?.trim() || null
+    phone,
+    phoneSearch: phone ? normalizePhoneForSearch(phone) || null : null
   };
 }
 
@@ -98,44 +153,61 @@ function searchWhere(filters?: RecordFilters): Prisma.RecordWhereInput[] {
 
   if (filters?.query) {
     const query = filters.query.trim();
+    const phoneQuery = normalizePhoneForSearch(query);
 
     if (query) {
       and.push({
         OR: [
           {
             senderFirstNameSnapshot: {
-              contains: query,
+              startsWith: query,
               mode: "insensitive"
             }
           },
           {
             senderLastNameSnapshot: {
-              contains: query,
+              startsWith: query,
               mode: "insensitive"
             }
           },
           {
             receiverFirstNameSnapshot: {
-              contains: query,
+              startsWith: query,
               mode: "insensitive"
             }
           },
           {
             receiverLastNameSnapshot: {
-              contains: query,
+              startsWith: query,
               mode: "insensitive"
             }
           },
           {
             senderPhoneSnapshot: {
-              contains: query
+              startsWith: query
             }
           },
           {
             receiverPhoneSnapshot: {
-              contains: query
+              startsWith: query
             }
-          }
+          },
+          ...namePairConditions("senderFirstNameSnapshot", "senderLastNameSnapshot", query),
+          ...namePairConditions("receiverFirstNameSnapshot", "receiverLastNameSnapshot", query),
+          ...(phoneQuery
+            ? [
+                {
+                  senderPhoneSearch: {
+                    startsWith: phoneQuery
+                  }
+                },
+                {
+                  receiverPhoneSearch: {
+                    startsWith: phoneQuery
+                  }
+                }
+              ]
+            : [])
         ]
       });
     }
@@ -156,20 +228,35 @@ function searchWhere(filters?: RecordFilters): Prisma.RecordWhereInput[] {
 
   if (filters?.phone) {
     const phone = filters.phone.trim();
+    const phoneQuery = normalizePhoneForSearch(phone);
 
     if (phone) {
       and.push({
         OR: [
           {
             senderPhoneSnapshot: {
-              contains: phone
+              startsWith: phone
             }
           },
           {
             receiverPhoneSnapshot: {
-              contains: phone
+              startsWith: phone
             }
-          }
+          },
+          ...(phoneQuery
+            ? [
+                {
+                  senderPhoneSearch: {
+                    startsWith: phoneQuery
+                  }
+                },
+                {
+                  receiverPhoneSearch: {
+                    startsWith: phoneQuery
+                  }
+                }
+              ]
+            : [])
         ]
       });
     }
@@ -269,10 +356,12 @@ export async function createRecord(
       senderFirstNameSnapshot: sender.firstName,
       senderLastNameSnapshot: sender.lastName,
       senderPhoneSnapshot: sender.phone,
+      senderPhoneSearch: sender.phoneSearch,
       receiverContactId: receiver.contactId,
       receiverFirstNameSnapshot: receiver.firstName,
       receiverLastNameSnapshot: receiver.lastName,
       receiverPhoneSnapshot: receiver.phone,
+      receiverPhoneSearch: receiver.phoneSearch,
       amount: data.amount.trim(),
       currency: data.currency,
       rate: data.rate.trim(),
@@ -318,10 +407,12 @@ export async function updateRecord(
       senderFirstNameSnapshot: sender.firstName,
       senderLastNameSnapshot: sender.lastName,
       senderPhoneSnapshot: sender.phone,
+      senderPhoneSearch: sender.phoneSearch,
       receiverContactId: receiver.contactId,
       receiverFirstNameSnapshot: receiver.firstName,
       receiverLastNameSnapshot: receiver.lastName,
       receiverPhoneSnapshot: receiver.phone,
+      receiverPhoneSearch: receiver.phoneSearch,
       amount: data.amount.trim(),
       currency: data.currency,
       rate: data.rate.trim(),

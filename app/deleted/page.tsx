@@ -18,10 +18,7 @@ export default async function DeletedPage({ searchParams }: DeletedPageProps) {
   });
 
   return (
-    <PageShell
-      title="Удаленные"
-      description="Удаленные записи можно восстановить в течение 7 дней. Редактировать их можно только после восстановления."
-    >
+    <PageShell title="Удаленные">
       {records.length === 0 ? (
         <div className="rounded-lg border border-[#d8dee8] bg-white p-6 text-sm text-[#64748b]">
           Удаленных записей нет.
