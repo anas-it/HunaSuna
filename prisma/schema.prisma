@@ -9,15 +9,14 @@ datasource db {
 model User {
   id                        String                 @id @default(cuid())
   login                     String                 @unique
+  loginNormalized           String                 @unique
   passwordHash              String
   secretQuestion            String?
   secretAnswerHash          String?
   firstName                 String?
   lastName                  String?
   phone                     String?                @unique
-  phoneVerified             Boolean                @default(false)
   email                     String?                @unique
-  emailUsableForRecovery    Boolean                @default(false)
   createdAt                 DateTime               @default(now())
   updatedAt                 DateTime               @updatedAt
   lastLoginAt               DateTime?
@@ -25,8 +24,6 @@ model User {
   records                   Record[]
   sessions                  UserSession[]
   loginAttempts             LoginAttempt[]
-  smsCodes                  SmsCode[]
-  passwordRecoveryCodes     PasswordRecoveryCode[]
   securityLogs              SecurityLog[]
   archivedRecords           ArchivedRecord[]
 }
@@ -114,40 +111,6 @@ model Record {
   @@index([receiverContactId])
   @@index([senderPhoneSnapshot])
   @@index([receiverPhoneSnapshot])
-}
-
-model SmsCode {
-  id          String    @id @default(cuid())
-  userId      String?
-  phone       String
-  codeHash    String
-  purpose     String
-  ipAddress   String?
-  attempts    Int       @default(0)
-  expiresAt   DateTime
-  consumedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([phone, createdAt])
-  @@index([ipAddress, createdAt])
-  @@index([expiresAt])
-}
-
-model PasswordRecoveryCode {
-  id          String    @id @default(cuid())
-  userId      String?
-  channel     String
-  target      String
-  codeHash    String
-  attempts    Int       @default(0)
-  expiresAt   DateTime
-  consumedAt  DateTime?
-  createdAt   DateTime  @default(now())
-  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([target, createdAt])
-  @@index([expiresAt])
 }
 
 model SecurityLog {

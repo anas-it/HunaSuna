@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getRequestMeta } from "@/server/auth/request";
 import { apiError, requireApiUser } from "@/server/auth/api";
-import { updateUserProfile } from "@/server/services/user.service";
+import {
+  revealUserSensitiveData,
+  updateUserEmail,
+  updateUserPassword,
+  updateUserProfile
+} from "@/server/services/user.service";
 
 export const preferredRegion = "fra1";
 export const runtime = "nodejs";
@@ -12,7 +17,6 @@ function publicUser(user: {
   firstName: string | null;
   lastName: string | null;
   phone: string | null;
-  phoneVerified: boolean;
   email: string | null;
 }) {
   return {
@@ -21,9 +25,12 @@ function publicUser(user: {
     firstName: user.firstName,
     lastName: user.lastName,
     phone: user.phone,
-    phoneVerified: user.phoneVerified,
     email: user.email
   };
+}
+
+function stringField(body: Record<string, unknown>, key: string) {
+  return typeof body[key] === "string" ? body[key] : "";
 }
 
 export async function PATCH(request: NextRequest) {
@@ -36,13 +43,72 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     const meta = await getRequestMeta();
-    const result = await updateUserProfile(user.id, body, meta);
+    const action = body.action ?? "profile";
 
-    return NextResponse.json({
-      ok: true,
-      user: publicUser(result.user),
-      phoneChanged: result.phoneChanged
-    });
+    if (action === "profile") {
+      if ("email" in body || "newPassword" in body) {
+        throw new Error("Email и пароль меняются отдельными действиями");
+      }
+
+      const result = await updateUserProfile(
+        user.id,
+        {
+          firstName: body.firstName,
+          lastName: body.lastName,
+          phone: body.phone
+        },
+        meta
+      );
+
+      return NextResponse.json({
+        ok: true,
+        user: publicUser(result.user),
+        phoneChanged: result.phoneChanged
+      });
+    }
+
+    if (action === "password") {
+      await updateUserPassword(
+        user.id,
+        {
+          currentPassword: stringField(body, "currentPassword"),
+          newPassword: stringField(body, "newPassword")
+        },
+        meta
+      );
+
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "email") {
+      await updateUserEmail(
+        user.id,
+        {
+          currentEmail: stringField(body, "currentEmail"),
+          newEmail: stringField(body, "newEmail")
+        },
+        meta
+      );
+
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === "reveal-sensitive") {
+      const data = await revealUserSensitiveData(user.id, stringField(body, "currentPassword"), meta);
+
+      return NextResponse.json({
+        ok: true,
+        data
+      });
+    }
+
+    return NextResponse.json(
+      {
+        ok: false,
+        message: "Неизвестное действие"
+      },
+      { status: 400 }
+    );
   } catch (error) {
     return apiError(error);
   }

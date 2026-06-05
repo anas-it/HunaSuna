@@ -7,9 +7,7 @@ import { settingsSchema } from "@/server/validators/settings.validator";
 type UpdateUserProfileInput = {
   firstName?: string;
   lastName?: string;
-  email?: string;
   phone?: string;
-  newPassword?: string;
 };
 
 export async function getUserProfile(userId: string) {
@@ -23,9 +21,7 @@ export async function getUserProfile(userId: string) {
       firstName: true,
       lastName: true,
       phone: true,
-      phoneVerified: true,
       email: true,
-      emailUsableForRecovery: true,
       createdAt: true,
       lastLoginAt: true
     }
@@ -55,7 +51,6 @@ export async function updateUserProfile(
         : null
       : currentUser.phone;
   const phoneChanged = nextPhone !== currentUser.phone;
-  const emailChanged = data.email !== undefined && data.email !== currentUser.email;
 
   if (phoneChanged && nextPhone) {
     const existingPhone = await prisma.user.findUnique({
@@ -69,38 +64,14 @@ export async function updateUserProfile(
     }
   }
 
-  if (data.email && emailChanged) {
-    const existingEmail = await prisma.user.findUnique({
-      where: {
-        email: data.email
-      }
-    });
-
-    if (existingEmail) {
-      throw new Error("Этот email уже используется");
-    }
-  }
-
   const user = await prisma.user.update({
     where: {
       id: userId
     },
     data: {
-      firstName: data.firstName?.trim() || null,
-      lastName: data.lastName?.trim() || null,
-      phone: nextPhone,
-      phoneVerified: Boolean(nextPhone),
-      ...(data.email !== undefined
-        ? {
-            email: data.email ?? null,
-            emailUsableForRecovery: Boolean(data.email)
-          }
-        : {}),
-      ...(data.newPassword
-        ? {
-            passwordHash: hashPassword(data.newPassword)
-          }
-        : {})
+      firstName: data.firstName !== undefined ? data.firstName.trim() || null : currentUser.firstName,
+      lastName: data.lastName !== undefined ? data.lastName.trim() || null : currentUser.lastName,
+      phone: nextPhone
     }
   });
 
@@ -109,9 +80,7 @@ export async function updateUserProfile(
     userId,
     ipAddress: meta?.ipAddress,
     metadata: {
-      phoneChanged,
-      emailChanged,
-      passwordChanged: Boolean(data.newPassword)
+      phoneChanged
     }
   });
 
@@ -215,8 +184,7 @@ export async function updateUserEmail(
       id: userId
     },
     data: {
-      email: newEmail,
-      emailUsableForRecovery: true
+      email: newEmail
     }
   });
 

@@ -27,6 +27,8 @@ description: Design and review the HunaSuna database model. Use when working wit
 - Пользователь.
 - Контакт.
 - Запись.
+- Сессия пользователя.
+- Попытка входа.
 - Валюта.
 - Курс.
 - Удаленная запись.
@@ -62,8 +64,9 @@ description: Design and review the HunaSuna database model. Use when working wit
 Поиск должен работать только по:
 
 - контакту;
-- дате;
 - номеру телефона.
+
+Поиск по дате в первой версии не делаем.
 
 Если номер телефона не указан, поиск по номеру такую запись не найдет.
 

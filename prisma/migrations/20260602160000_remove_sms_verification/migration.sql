@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS "SmsCode";
+
+ALTER TABLE "User" DROP COLUMN IF EXISTS "phoneVerified";

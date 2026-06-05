@@ -1,5 +1,5 @@
 export const authConfig = {
-  provider: "better-auth",
+  provider: "custom-session-cookie",
   loginMethod: "username-and-password",
-  phoneVerification: true
+  phoneVerification: false
 } as const;

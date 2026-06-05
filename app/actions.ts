@@ -257,12 +257,16 @@ export async function resetPasswordAction(formData: FormData) {
   let nextPath = "/login";
 
   try {
-    await resetPassword({
-      target: text(formData, "target"),
-      secretAnswer: text(formData, "secretAnswer"),
-      newPassword: text(formData, "newPassword"),
-      confirmPassword: text(formData, "confirmPassword")
-    });
+    const meta = await getRequestMeta();
+    await resetPassword(
+      {
+        target: text(formData, "target"),
+        secretAnswer: text(formData, "secretAnswer"),
+        newPassword: text(formData, "newPassword"),
+        confirmPassword: text(formData, "confirmPassword")
+      },
+      meta
+    );
   } catch (error) {
     nextPath = withError(
       `/forgot-password?step=reset&target=${encodeURIComponent(text(formData, "target"))}&question=${encodeURIComponent(text(formData, "secretQuestion"))}`,
@@ -411,9 +415,7 @@ export async function updateSettingsAction(formData: FormData) {
       {
         firstName: optionalText(formData, "firstName"),
         lastName: optionalText(formData, "lastName"),
-        email: optionalText(formData, "email"),
-        phone: optionalText(formData, "phone"),
-        newPassword: optionalText(formData, "newPassword")
+        phone: optionalText(formData, "phone")
       },
       meta
     );

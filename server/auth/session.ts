@@ -14,9 +14,12 @@ export type CurrentUser = {
   firstName: string | null;
   lastName: string | null;
   phone: string | null;
-  phoneVerified: boolean;
   email: string | null;
-  emailUsableForRecovery: boolean;
+};
+
+export type CreatedSession = {
+  token: string;
+  expiresAt: Date;
 };
 
 function hashSessionToken(token: string) {
@@ -39,7 +42,7 @@ export async function createSession(
   userId: string,
   meta?: { ipAddress?: string; userAgent?: string },
   options?: { remember?: boolean }
-) {
+): Promise<CreatedSession> {
   const remember = Boolean(options?.remember);
   const token = randomBytes(32).toString("hex");
   const expiresAt = sessionExpiresAt(remember);
@@ -70,12 +73,11 @@ export async function createSession(
   } else {
     cookieStore.set(SESSION_COOKIE, token, cookieOptions);
   }
+
+  return { token, expiresAt };
 }
 
-export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE)?.value;
-
+export async function findUserBySessionToken(token: string): Promise<CurrentUser | null> {
   if (!token) {
     return null;
   }
@@ -95,9 +97,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
           firstName: true,
           lastName: true,
           phone: true,
-          phoneVerified: true,
-          email: true,
-          emailUsableForRecovery: true
+          email: true
         }
       }
     }
@@ -108,6 +108,13 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   }
 
   return session.user;
+}
+
+export async function getCurrentUser(): Promise<CurrentUser | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(SESSION_COOKIE)?.value;
+
+  return token ? findUserBySessionToken(token) : null;
 }
 
 export async function requirePageUser() {
@@ -140,16 +147,24 @@ export async function redirectAuthenticatedUser() {
   redirect("/dashboard");
 }
 
+export async function destroySessionToken(token: string) {
+  if (!token) {
+    return;
+  }
+
+  await prisma.userSession.deleteMany({
+    where: {
+      tokenHash: hashSessionToken(token)
+    }
+  });
+}
+
 export async function destroyCurrentSession() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE)?.value;
 
   if (token) {
-    await prisma.userSession.deleteMany({
-      where: {
-        tokenHash: hashSessionToken(token)
-      }
-    });
+    await destroySessionToken(token);
   }
 
   cookieStore.set(SESSION_COOKIE, "", {

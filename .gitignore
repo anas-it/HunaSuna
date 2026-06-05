@@ -12,3 +12,4 @@ coverage
 .vercel
 .pglite
 *.log
+.codex-logs/

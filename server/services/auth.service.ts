@@ -32,19 +32,28 @@ function loginTarget(value: string) {
   return value.trim().toLowerCase();
 }
 
+function recoveryAttemptTarget(value: string) {
+  return `password-recovery:${loginTarget(value)}`;
+}
+
+function normalizeLogin(value: string) {
+  return value.trim().toLowerCase();
+}
+
 function normalizeSecretAnswer(answer: string) {
   return answer.trim().toLowerCase();
 }
 
 async function findUserForLogin(value: string) {
   const target = value.trim();
+  const normalizedLogin = normalizeLogin(target);
   const normalizedPhone = normalizePhone(target);
 
   return prisma.user.findFirst({
     where: {
       OR: [
         {
-          login: target
+          loginNormalized: normalizedLogin
         },
         {
           phone: normalizedPhone
@@ -89,15 +98,37 @@ async function assertLoginAllowed(target: string, ipAddress?: string) {
   }
 }
 
+async function assertPasswordRecoveryAllowed(target: string, ipAddress?: string) {
+  const since = addMinutes(new Date(), -LOGIN_BLOCK_MINUTES);
+
+  const failedAttempts = await prisma.loginAttempt.count({
+    where: {
+      target: recoveryAttemptTarget(target),
+      ipAddress,
+      success: false,
+      createdAt: {
+        gte: since
+      }
+    }
+  });
+
+  if (failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
+    throw new Error(
+      "Слишком много неправильных ответов. Попробуйте через 30 минут."
+    );
+  }
+}
+
 export async function registerUser(input: RegisterInput, meta?: RequestMeta) {
   const data = registerSchema.parse({
     ...input,
     login: input.login.trim()
   });
+  const loginNormalized = normalizeLogin(data.login);
 
   const existingUser = await prisma.user.findUnique({
     where: {
-      login: data.login
+      loginNormalized
     }
   });
 
@@ -108,11 +139,10 @@ export async function registerUser(input: RegisterInput, meta?: RequestMeta) {
   const user = await prisma.user.create({
     data: {
       login: data.login,
+      loginNormalized,
       passwordHash: hashPassword(data.password),
       phone: null,
-      phoneVerified: true,
       email: null,
-      emailUsableForRecovery: false,
       secretQuestion: data.secretQuestion.trim(),
       secretAnswerHash: hashPassword(normalizeSecretAnswer(data.secretAnswer))
     }
@@ -192,6 +222,7 @@ export async function requestPasswordRecovery(
   meta?: RequestMeta
 ) {
   const target = targetInput.trim();
+  const normalizedLogin = normalizeLogin(target);
 
   if (!target) {
     throw new Error("Укажите логин");
@@ -199,7 +230,7 @@ export async function requestPasswordRecovery(
 
   const user = await prisma.user.findUnique({
     where: {
-      login: target
+      loginNormalized: normalizedLogin
     }
   });
 
@@ -230,13 +261,17 @@ export async function resetPassword(input: {
   secretAnswer: string;
   newPassword: string;
   confirmPassword: string;
-}) {
+}, meta?: RequestMeta) {
   const data = passwordRecoverySchema.parse(input);
   const target = data.target.trim();
+  const normalizedLogin = normalizeLogin(target);
+  const recoveryTarget = recoveryAttemptTarget(target);
+
+  await assertPasswordRecoveryAllowed(target, meta?.ipAddress);
 
   const user = await prisma.user.findUnique({
     where: {
-      login: target
+      loginNormalized: normalizedLogin
     }
   });
 
@@ -250,9 +285,17 @@ export async function resetPassword(input: {
       user.secretAnswerHash
     )
   ) {
+    await recordLoginAttempt({
+      userId: user.id,
+      target: recoveryTarget,
+      ipAddress: meta?.ipAddress,
+      success: false
+    });
+
     await writeSecurityLog({
       action: "password_recovery_failed",
       userId: user.id,
+      ipAddress: meta?.ipAddress,
       metadata: {
         reason: "secret_answer"
       }
@@ -287,7 +330,7 @@ export async function resetPassword(input: {
           },
           {
             target: {
-              in: loginAttemptTargets
+              in: [...loginAttemptTargets, recoveryTarget]
             }
           }
         ]
@@ -297,6 +340,7 @@ export async function resetPassword(input: {
 
   await writeSecurityLog({
     action: "password_reset",
-    userId: user.id
+    userId: user.id,
+    ipAddress: meta?.ipAddress
   });
 }

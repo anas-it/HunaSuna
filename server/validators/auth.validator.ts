@@ -16,11 +16,6 @@ export const loginSchema = z.object({
   password: z.string().min(4)
 });
 
-export const smsCodeSchema = z.object({
-  phone: z.string().min(4),
-  code: z.string().min(1)
-});
-
 export const passwordRecoverySchema = z.object({
   target: z.string().min(1),
   secretAnswer: z.string().trim().min(2),
