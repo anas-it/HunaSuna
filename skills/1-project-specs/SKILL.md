@@ -64,28 +64,28 @@ description: Create, review, update, and synchronize HunaSuna project specificat
 
 ## Важные спеки
 
-- `README.md` - карта групп спецификаций и главные источники правды.
-- `global-specs/00-обзор-проекта.md` - краткая карта проекта.
-- `global-specs/01-проект-и-промт.md` - идея проекта и границы.
-- `functional-specs/02-продукт.md` - продуктовая логика.
-- `functional-specs/03-функции.md` - функции первой версии.
-- `functional-specs/04-сценарии-пользователя.md` - пользовательские сценарии.
-- `functional-specs/06-интерфейс.md` - интерфейс.
-- `data-security-specs/05-данные.md` - модель данных.
-- `data-security-specs/07-безопасность.md` - безопасность.
-- `data-security-specs/08-роли-и-доступ.md` - роли и доступ.
-- `data-security-specs/10-юридический.md` - юридические ограничения.
-- `technical-specs/09-технический.md` - техническая архитектура.
-- `technical-specs/12-технические-решения.md` - выбранные технологии первой версии.
-- `technical-specs/13-структура-проекта.md` - структура будущего кода.
-- `technical-specs/14-оптимизация.md` - оптимизация и пагинация.
-- `technical-specs/16-api-contract.md` - API-контракт для web и mobile.
-- `mobile-specs/15-мобильное-приложение.md` - правила мобильной версии.
-- `mobile-specs/17-мобильная-безопасность.md` - безопасность мобильного приложения.
-- `planning-specs/11-план-разработки.md` - порядок разработки первой версии.
+- `specification/README.md` - карта групп спецификаций и главные источники правды.
+- `specification/global-specs/00-project-overview.md` - краткая карта проекта.
+- `specification/global-specs/01-project-and-prompt.md` - идея проекта и границы.
+- `specification/functional-specs/02-product.md` - продуктовая логика.
+- `specification/functional-specs/03-features.md` - функции первой версии.
+- `specification/functional-specs/04-user-scenarios.md` - пользовательские сценарии.
+- `specification/functional-specs/06-interface.md` - интерфейс.
+- `specification/data-security-specs/05-data.md` - модель данных.
+- `specification/data-security-specs/07-security.md` - безопасность.
+- `specification/data-security-specs/08-roles-and-access.md` - роли и доступ.
+- `specification/data-security-specs/10-legal.md` - юридические ограничения.
+- `specification/technical-specs/09-technical.md` - техническая архитектура.
+- `specification/technical-specs/12-technical-decisions.md` - выбранные технологии первой версии.
+- `specification/technical-specs/13-project-structure.md` - структура будущего кода.
+- `specification/technical-specs/14-optimization.md` - оптимизация и пагинация.
+- `specification/technical-specs/16-api-contract.md` - API-контракт для web и mobile.
+- `specification/mobile-specs/15-mobile-app.md` - правила мобильной версии.
+- `specification/mobile-specs/17-mobile-security.md` - безопасность мобильного приложения.
+- `specification/planning-specs/11-development-plan.md` - порядок разработки первой версии.
 
 ## Важные планы
 
-- `active-plans/` - рабочие планы будущей и текущей разработки.
-- `completed-plans/` - выполненные планы и описания уже сделанных этапов.
-- Спеки не переносить в папки планов. Спек `specification/planning-specs/11-план-разработки.md` остается в `specification/`.
+- `plans/active-plans/` - рабочие планы будущей и текущей разработки.
+- `plans/completed-plans/` - выполненные планы и описания уже сделанных этапов.
+- Спеки не переносить в папки планов. Спек `specification/planning-specs/11-development-plan.md` остается в `specification/`.

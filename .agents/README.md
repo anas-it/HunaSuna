@@ -13,7 +13,7 @@
 1. `../AGENTS.md` - обязательные правила для агента.
 2. `../README.md` - карта проекта для человека.
 3. `../specification/README.md` - карта спецификаций.
-4. `../active-plans/README.md` - текущая работа.
+4. `../plans/active-plans/README.md` - текущая работа.
 
 ## Правило
 

@@ -6,10 +6,10 @@ HunaSuna не переводит деньги, не хранит деньги и
 
 ## С чего начинать
 
-1. Общая карта проекта: `specification/global-specs/00-обзор-проекта.md`.
+1. Общая карта проекта: `specification/global-specs/00-project-overview.md`.
 2. Карта всех спецификаций: `specification/README.md`.
-3. Текущая работа: `active-plans/README.md`.
-4. История завершенных этапов: `completed-plans/README.md`.
+3. Текущая работа: `plans/active-plans/README.md`.
+4. История завершенных этапов: `plans/completed-plans/README.md`.
 5. Заметные изменения: `CHANGELOG.md`.
 
 ## Главные папки
@@ -28,8 +28,7 @@ HunaSuna не переводит деньги, не хранит деньги и
 | `scripts/` | Ручные технические скрипты. |
 | `specification/` | Постоянные спеки проекта. |
 | `skills/` | Рабочие инструкции по направлениям разработки. |
-| `active-plans/` | Текущие рабочие планы. |
-| `completed-plans/` | Выполненные планы и история этапов. |
+| `plans/` | Рабочие планы: текущие в `plans/active-plans/`, выполненные в `plans/completed-plans/`. |
 | `public/` | Статичные файлы web-приложения. |
 
 ## Команды

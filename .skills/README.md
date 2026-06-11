@@ -1,4 +1,4 @@
-# .skills
+﻿# .skills
 
 Эта папка нужна как быстрый вход в скилы проекта.
 
@@ -10,11 +10,11 @@
 
 ## Текущие скилы
 
-- `../skills/1-спеки-проекта/SKILL.md`
+- `../skills/1-project-specs/SKILL.md`
 - `../skills/2-nextjs-fullstack/SKILL.md`
-- `../skills/3-база-данных/SKILL.md`
-- `../skills/4-безопасность-и-авторизация/SKILL.md`
-- `../skills/5-интерфейс/SKILL.md`
+- `../skills/3-database/SKILL.md`
+- `../skills/4-security-and-auth/SKILL.md`
+- `../skills/5-interface/SKILL.md`
 - `../skills/6-mobile-app/SKILL.md`
 
 ## Правило

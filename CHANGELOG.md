@@ -2,20 +2,22 @@
 
 ## 2026-06-11
 
-- Папки рабочих планов переименованы на английский: `active-plans/` и `completed-plans/`; ссылки в спеках, README, AGENTS, скилах и changelog обновлены.
-- Папка `specification/` упорядочена по группам: `global-specs/`, `functional-specs/`, `data-security-specs/`, `technical-specs/`, `mobile-specs/` и `planning-specs/`; ссылки в README, AGENTS, скилах, спеках и планах обновлены.
+- Рабочие планы перенесены в общую папку `plans/`: текущие лежат в `plans/active-plans/`, завершенные - в `plans/completed-plans/`.
+- Имена папок в `skills/` переведены на английский: `skills/1-project-specs/`, `skills/3-database/`, `skills/4-security-and-auth/` и `skills/5-interface/`.
+- Имена файлов в `specification/` переведены на английский, а ссылки в README, AGENTS, скилах, спеках и планах обновлены.
+- Папка `specification/` упорядочена по группам: `specification/global-specs/`, `specification/functional-specs/`, `specification/data-security-specs/`, `specification/technical-specs/`, `specification/mobile-specs/` и `specification/planning-specs/`.
 - Добавлены `.agents/`, `.skills/` и `.vscode/settings.json`: в VS Code скрываются служебные кэши, зависимости, логи и сгенерированные файлы, а правила агентов и скилы получили понятные навигационные входы.
-- Наведена структура навигации по проекту: добавлены README-карты для корня, `app/`, `components/`, `server/`, `lib/`, `mobile/`, `prisma/` и `active-plans/`; из рабочей папки убраны пустые директории старого SMS/verify-phone сценария.
+- Наведена структура навигации по проекту: добавлены README-карты для корня, `app/`, `components/`, `server/`, `lib/`, `mobile/`, `prisma/` и `plans/active-plans/`; из рабочей папки убраны пустые директории старого SMS/verify-phone сценария.
 - Первый App Store release мобильного приложения настроен как iPhone-only: в `mobile/app.json` отключен `ios.supportsTablet`.
 - Production iOS build мобильного приложения привязан к EAS environment `production`; в EAS добавлены публичные URL-переменные `EXPO_PUBLIC_API_BASE_URL` и `EXPO_PUBLIC_WEB_API_BASE_URL` со значением `https://hunasuna.pro`.
-- Добавлен активный план `active-plans/01-app-store-публикация.md` для пошаговой публикации мобильного приложения HunaSuna в App Store через EAS Build, TestFlight и App Store Connect.
+- Добавлен активный план `plans/active-plans/01-app-store-публикация.md` для пошаговой публикации мобильного приложения HunaSuna в App Store через EAS Build, TestFlight и App Store Connect.
 - Правило удаления синхронизировано: удаленная запись 7 дней видна в разделе `Удаленные`, затем исчезает из web/mobile интерфейса и остается только в техническом архиве базы данных без пользовательского доступа.
 - Cron `/api/cron/deleted-records` настроен для ежедневного архивирования записей, срок восстановления которых истек; очистка технического архива по сроку убрана.
 - API записей, контактов и профиля переведен на явные `select`, чтобы не отдавать лишние внутренние поля пользователю.
 - Регистрация теперь поддерживает необязательные телефон, email или оба значения.
 - Время записи определяется backend по IP/infrastructure headers, мобильный клиент больше не отправляет timezone-заголовок.
 - Native mobile app хранит session token в SecureStore, Expo Web/dev preview использует `sessionStorage`, production web-сайт остается на httpOnly cookie.
-- План мобильной разработки перенесен из `active-plans/` в `completed-plans/04-мобильная-разработка.md`.
+- План мобильной разработки перенесен из `plans/active-plans/` в `plans/completed-plans/04-мобильная-разработка.md`.
 
 ## 2026-06-05
 
@@ -64,7 +66,7 @@
 - CORS для Expo Web больше не разрешает отдельный timezone-заголовок: вход и API-запросы из `localhost:8081` работают через стандартные `Authorization`, `Content-Type` и `X-HunaSuna-Client`.
 - CORS для Expo Web больше не привязан к одному LAN-IP, а EAS config перенесен в папку `mobile`.
 - В mobile и web убраны лишние описания под заголовками разделов; нижняя мобильная навигация оставлена без видимых подписей.
-- Добавлены спеки `15-мобильное-приложение.md`, `16-api-contract.md` и `17-мобильная-безопасность.md`.
+- Добавлены спеки `specification/mobile-specs/15-mobile-app.md`, `specification/technical-specs/16-api-contract.md` и `specification/mobile-specs/17-mobile-security.md`.
 - Добавлен скил `skills/6-mobile-app` и обновлен README скилов.
 - Активный мобильный план обновлен под React Native, Expo, TypeScript, общий API и bearer session token.
 - Восстановление пароля зафиксировано только через секретный вопрос и ответ; старые `PasswordRecoveryCode` и `emailUsableForRecovery` удалены из Prisma schema.
@@ -75,11 +77,11 @@
 
 ## 2026-06-02
 
-- Созданы папки `active-plans/` и `completed-plans/`.
-- Уточнено, что спеки остаются в `specification/`, а `active-plans/` используются для рабочих планов будущей и текущей разработки.
-- План разработки первой версии оставлен в `specification/planning-specs/11-план-разработки.md`.
+- Созданы папки `plans/active-plans/` и `plans/completed-plans/`.
+- Уточнено, что спеки остаются в `specification/`, а `plans/active-plans/` используются для рабочих планов будущей и текущей разработки.
+- План разработки первой версии оставлен в `specification/planning-specs/11-development-plan.md`.
 - Добавлен активный план мобильной разработки проекта.
-- В `completed-plans/` добавлены описания уже выполненных этапов проекта.
+- В `plans/completed-plans/` добавлены описания уже выполненных этапов проекта.
 - Принято решение не использовать SMS-подтверждение в первой версии.
 - Удалены SMS-переменные окружения Twilio/Vonage из `.env`.
 - Удалены `phoneVerified`, `SmsCode`, verify-phone route/page и добавлена миграция удаления SMS-таблицы.

@@ -30,7 +30,7 @@
 - Первый релиз настроен только для iPhone: `ios.supportsTablet` отключен.
 - Bundle ID: `pro.hunasuna.mobile`.
 - Production API URL задается в EAS environment: `https://hunasuna.pro`.
-- План публикации: `../active-plans/01-app-store-публикация.md`.
+- План публикации: `../plans/active-plans/01-app-store-публикация.md`.
 
 ## Команды
 

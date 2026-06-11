@@ -13,11 +13,11 @@ description: Build, review, and plan the HunaSuna mobile application. Use when w
 
 ## Перед работой читать
 
-- `specification/mobile-specs/15-мобильное-приложение.md`;
+- `specification/mobile-specs/15-mobile-app.md`;
 - `specification/technical-specs/16-api-contract.md`;
-- `specification/mobile-specs/17-мобильная-безопасность.md`;
-- `specification/technical-specs/12-технические-решения.md`;
-- `completed-plans/04-мобильная-разработка.md`.
+- `specification/mobile-specs/17-mobile-security.md`;
+- `specification/technical-specs/12-technical-decisions.md`;
+- `plans/completed-plans/04-мобильная-разработка.md`.
 
 ## Технические правила
 

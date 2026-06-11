@@ -2,9 +2,9 @@
 
 Перед изменением мобильного приложения читать:
 
-- `../specification/mobile-specs/15-мобильное-приложение.md`;
+- `../specification/mobile-specs/15-mobile-app.md`;
 - `../specification/technical-specs/16-api-contract.md`;
-- `../specification/mobile-specs/17-мобильная-безопасность.md`;
+- `../specification/mobile-specs/17-mobile-security.md`;
 - `../skills/6-mobile-app/SKILL.md`;
 - Expo SDK 54 docs: https://docs.expo.dev/versions/v54.0.0/.
 
