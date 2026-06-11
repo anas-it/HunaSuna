@@ -17,7 +17,7 @@ function corsHeaders(origin: string | null) {
 
   headers.set("Vary", "Origin");
   headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
-  headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-HunaSuna-Client, X-HunaSuna-Timezone");
+  headers.set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-HunaSuna-Client");
 
   if (origin && isAllowedOrigin(origin)) {
     headers.set("Access-Control-Allow-Origin", origin);

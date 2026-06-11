@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db/prisma";
 import { normalizePhone } from "@/lib/phone";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
@@ -10,21 +11,21 @@ type UpdateUserProfileInput = {
   phone?: string;
 };
 
+const userProfileSelect = {
+  id: true,
+  login: true,
+  firstName: true,
+  lastName: true,
+  phone: true,
+  email: true
+} satisfies Prisma.UserSelect;
+
 export async function getUserProfile(userId: string) {
   return prisma.user.findUnique({
     where: {
       id: userId
     },
-    select: {
-      id: true,
-      login: true,
-      firstName: true,
-      lastName: true,
-      phone: true,
-      email: true,
-      createdAt: true,
-      lastLoginAt: true
-    }
+    select: userProfileSelect
   });
 }
 
@@ -37,6 +38,11 @@ export async function updateUserProfile(
   const currentUser = await prisma.user.findUnique({
     where: {
       id: userId
+    },
+    select: {
+      firstName: true,
+      lastName: true,
+      phone: true
     }
   });
 
@@ -72,7 +78,8 @@ export async function updateUserProfile(
       firstName: data.firstName !== undefined ? data.firstName.trim() || null : currentUser.firstName,
       lastName: data.lastName !== undefined ? data.lastName.trim() || null : currentUser.lastName,
       phone: nextPhone
-    }
+    },
+    select: userProfileSelect
   });
 
   await writeSecurityLog({
@@ -147,7 +154,7 @@ export async function updateUserEmail(
   meta?: { ipAddress?: string }
 ) {
   const currentEmail = input.currentEmail?.trim() || "";
-  const newEmail = input.newEmail.trim();
+  const newEmail = input.newEmail.trim().toLowerCase();
 
   if (!newEmail || !newEmail.includes("@")) {
     throw new Error("Укажите корректный новый email");
@@ -168,9 +175,15 @@ export async function updateUserEmail(
   }
 
   if (newEmail !== user.email) {
-    const existingEmail = await prisma.user.findUnique({
+    const existingEmail = await prisma.user.findFirst({
       where: {
-        email: newEmail
+        id: {
+          not: userId
+        },
+        email: {
+          equals: newEmail,
+          mode: "insensitive"
+        }
       }
     });
 

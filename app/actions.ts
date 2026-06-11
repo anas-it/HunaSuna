@@ -41,19 +41,6 @@ function optionalText(formData: FormData, key: string) {
   return value ? value : undefined;
 }
 
-function validTimezone(value: string | undefined, fallback: string) {
-  if (!value) {
-    return fallback;
-  }
-
-  try {
-    new Intl.DateTimeFormat("ru-RU", { timeZone: value }).format(new Date());
-    return value;
-  } catch {
-    return fallback;
-  }
-}
-
 function checked(formData: FormData, key: string) {
   return formData.get(key) === "on";
 }
@@ -210,6 +197,8 @@ export async function registerAction(formData: FormData) {
         login: text(formData, "login"),
         password: text(formData, "password"),
         confirmPassword: text(formData, "confirmPassword"),
+        email: optionalText(formData, "email"),
+        phone: optionalText(formData, "phone"),
         secretQuestion: text(formData, "secretQuestion"),
         secretAnswer: text(formData, "secretAnswer")
       },
@@ -359,7 +348,7 @@ export async function createRecordAction(formData: FormData) {
         currency: text(formData, "currency"),
         rate: text(formData, "rate")
       },
-      validTimezone(optionalText(formData, "timezone"), meta.timezone),
+      meta.timezone,
       meta
     );
   } catch (error) {
@@ -385,7 +374,7 @@ export async function updateRecordAction(recordId: string, formData: FormData) {
         currency: text(formData, "currency"),
         rate: text(formData, "rate")
       },
-      validTimezone(optionalText(formData, "timezone"), meta.timezone),
+      meta.timezone,
       meta
     );
   } catch (error) {

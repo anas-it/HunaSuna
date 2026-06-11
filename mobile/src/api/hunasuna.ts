@@ -39,6 +39,7 @@ export type RecordListItem = {
 };
 
 export type RecordDetail = RecordListItem & {
+  deletedAt: string | null;
   senderContactId: string | null;
   receiverContactId: string | null;
 };

@@ -23,10 +23,8 @@ export async function getRequestMeta() {
     "127.0.0.1";
 
   const timezone =
-    validTimezone(headerStore.get("x-hunasuna-timezone")) ??
     validTimezone(headerStore.get("x-vercel-ip-timezone")) ??
     validTimezone(headerStore.get("cf-timezone")) ??
-    Intl.DateTimeFormat().resolvedOptions().timeZone ??
     "UTC";
 
   return {

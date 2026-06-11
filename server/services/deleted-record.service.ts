@@ -9,7 +9,7 @@ import {
 } from "@/lib/pagination";
 import { prisma } from "@/server/db/prisma";
 import { writeSecurityLog } from "@/server/logs/security-log.service";
-import { recordListSelect } from "@/server/services/record.service";
+import { recordDetailSelect, recordListSelect } from "@/server/services/record.service";
 
 function deletedRecordsWhere(userId: string) {
   return {
@@ -106,7 +106,8 @@ export async function restoreDeletedRecord(
     data: {
       deletedAt: null,
       restoreUntil: null
-    }
+    },
+    select: recordDetailSelect
   });
 
   await writeSecurityLog({

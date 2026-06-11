@@ -139,9 +139,7 @@ model ArchivedRecord {
   originalRecordId  String   @unique
   data              Json
   archivedAt        DateTime @default(now())
-  deleteAfter       DateTime
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([deleteAfter])
 }

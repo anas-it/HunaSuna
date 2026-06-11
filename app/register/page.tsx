@@ -32,6 +32,17 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
           />
           <input
             className="rounded-md border border-[#cbd5e1] px-3 py-2"
+            name="phone"
+            placeholder="Телефон, если есть"
+          />
+          <input
+            className="rounded-md border border-[#cbd5e1] px-3 py-2"
+            name="email"
+            placeholder="Email, если есть"
+            type="email"
+          />
+          <input
+            className="rounded-md border border-[#cbd5e1] px-3 py-2"
             minLength={4}
             name="password"
             placeholder="Пароль минимум 4 символа"

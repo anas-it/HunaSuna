@@ -36,6 +36,8 @@ export function AuthScreen({ onAuthenticated }: Props) {
   const scrollRef = useRef<ScrollView>(null);
   const [mode, setMode] = useState<AuthMode>("login");
   const [login, setLogin] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [secretQuestion, setSecretQuestion] = useState("");
@@ -104,6 +106,8 @@ export function AuthScreen({ onAuthenticated }: Props) {
           action: "register",
           client: "mobile",
           login,
+          email,
+          phone,
           password,
           confirmPassword,
           secretQuestion,
@@ -221,7 +225,26 @@ export function AuthScreen({ onAuthenticated }: Props) {
               {mode === "register" ? (
                 <>
                   <TextInput
+                    autoCapitalize="none"
+                    keyboardType="email-address"
                     onFocus={() => scrollToAuthForm(156)}
+                    onChangeText={setEmail}
+                    placeholder="Email, если есть"
+                    placeholderTextColor={colors.muted}
+                    style={styles.input}
+                    value={email}
+                  />
+                  <TextInput
+                    keyboardType="phone-pad"
+                    onFocus={() => scrollToAuthForm(196)}
+                    onChangeText={setPhone}
+                    placeholder="Телефон, если есть"
+                    placeholderTextColor={colors.muted}
+                    style={styles.input}
+                    value={phone}
+                  />
+                  <TextInput
+                    onFocus={() => scrollToAuthForm(236)}
                     onChangeText={setConfirmPassword}
                     placeholder="Повторите пароль"
                     placeholderTextColor={colors.muted}
@@ -230,7 +253,7 @@ export function AuthScreen({ onAuthenticated }: Props) {
                     value={confirmPassword}
                   />
                   <TextInput
-                    onFocus={() => scrollToAuthForm(196)}
+                    onFocus={() => scrollToAuthForm(276)}
                     onChangeText={setSecretQuestion}
                     placeholder="Секретный вопрос"
                     placeholderTextColor={colors.muted}
@@ -238,7 +261,7 @@ export function AuthScreen({ onAuthenticated }: Props) {
                     value={secretQuestion}
                   />
                   <TextInput
-                    onFocus={() => scrollToAuthForm(236)}
+                    onFocus={() => scrollToAuthForm(316)}
                     onChangeText={setSecretAnswer}
                     placeholder="Секретный ответ"
                     placeholderTextColor={colors.muted}

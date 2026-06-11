@@ -105,8 +105,19 @@ export const recordListSelect = {
   restoreUntil: true
 } satisfies Prisma.RecordSelect;
 
+export const recordDetailSelect = {
+  ...recordListSelect,
+  deletedAt: true,
+  senderContactId: true,
+  receiverContactId: true
+} satisfies Prisma.RecordSelect;
+
 export type RecordListItem = Prisma.RecordGetPayload<{
   select: typeof recordListSelect;
+}>;
+
+export type RecordDetail = Prisma.RecordGetPayload<{
+  select: typeof recordDetailSelect;
 }>;
 
 async function resolvePerson(userId: string, person: PersonInput) {
@@ -116,6 +127,12 @@ async function resolvePerson(userId: string, person: PersonInput) {
         id: person.contactId,
         userId,
         deletedAt: null
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        phone: true
       }
     });
 
@@ -336,12 +353,24 @@ export async function listRecordsPage(userId: string, filters?: RecordFilters) {
 }
 
 export async function getRecord(userId: string, recordId: string) {
+  const now = new Date();
   const record = await prisma.record.findFirst({
     where: {
       id: recordId,
       userId,
-      archivedAt: null
-    }
+      archivedAt: null,
+      OR: [
+        {
+          deletedAt: null
+        },
+        {
+          restoreUntil: {
+            gt: now
+          }
+        }
+      ]
+    },
+    select: recordDetailSelect
   });
 
   if (!record) {
@@ -378,7 +407,8 @@ export async function createRecord(
       currency: data.currency,
       rate: data.rate.trim(),
       timezone
-    }
+    },
+    select: recordDetailSelect
   });
 
   await writeSecurityLog({
@@ -429,7 +459,8 @@ export async function updateRecord(
       currency: data.currency,
       rate: data.rate.trim(),
       timezone
-    }
+    },
+    select: recordDetailSelect
   });
 
   await writeSecurityLog({
@@ -497,7 +528,8 @@ export async function deleteRecord(
     data: {
       deletedAt: now,
       restoreUntil: addDays(now, DELETED_RECORD_RESTORE_DAYS)
-    }
+    },
+    select: recordDetailSelect
   });
 
   await writeSecurityLog({

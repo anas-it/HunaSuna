@@ -3,7 +3,6 @@ export const SUPPORTED_CURRENCIES = ["TRY", "USD", "EUR", "RUB", "CNY"] as const
 export const MAX_FAILED_LOGIN_ATTEMPTS = 5;
 export const LOGIN_BLOCK_MINUTES = 30;
 export const DELETED_RECORD_RESTORE_DAYS = 7;
-export const ARCHIVE_RETENTION_MONTHS = 3;
 export const RECORDS_PAGE_SIZE = 15;
 export const MAX_RECORDS_PAGE_SIZE = 50;
 export const CONTACTS_PAGE_SIZE = 50;

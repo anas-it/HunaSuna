@@ -1,0 +1,53 @@
+{
+  "explorer.compactFolders": false,
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    ".env.example": ".env,.env.local",
+    "app.json": "eas.json",
+    "next.config.ts": "next-env.d.ts",
+    "package.json": "package-lock.json",
+    "tsconfig.json": "tsconfig.tsbuildinfo"
+  },
+  "files.exclude": {
+    "**/.codex-logs": true,
+    "**/.next": true,
+    "**/.pglite": true,
+    "**/.vercel": true,
+    "**/coverage": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/node_modules": true,
+    "**/*.log": true,
+    "**/*.tsbuildinfo": true,
+    "**/next-env.d.ts": true,
+    "**/mobile/.claude": true,
+    "**/mobile/.expo": true,
+    "**/mobile/node_modules": true
+  },
+  "search.exclude": {
+    "**/.codex-logs": true,
+    "**/.next": true,
+    "**/.pglite": true,
+    "**/.vercel": true,
+    "**/coverage": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/node_modules": true,
+    "**/*.log": true,
+    "**/mobile/.expo": true,
+    "**/mobile/node_modules": true
+  },
+  "files.watcherExclude": {
+    "**/.codex-logs/**": true,
+    "**/.next/**": true,
+    "**/.pglite/**": true,
+    "**/.vercel/**": true,
+    "**/coverage/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/node_modules/**": true,
+    "**/mobile/.expo/**": true,
+    "**/mobile/node_modules/**": true
+  }
+}

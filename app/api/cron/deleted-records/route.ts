@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { cleanupArchivedRecordsJob } from "@/server/jobs/cleanup-archived-records.job";
-import { cleanupDeletedRecordsJob } from "@/server/jobs/cleanup-deleted-records.job";
+import { archiveExpiredDeletedRecordsJob } from "@/server/jobs/archive-expired-deleted-records.job";
 
 export const preferredRegion = "fra1";
 export const runtime = "nodejs";
@@ -12,12 +11,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, message: "Forbidden" }, { status: 403 });
   }
 
-  const deleted = await cleanupDeletedRecordsJob();
-  const archived = await cleanupArchivedRecordsJob();
+  const deleted = await archiveExpiredDeletedRecordsJob();
 
   return NextResponse.json({
     ok: true,
-    deleted,
-    archived
+    deleted
   });
 }

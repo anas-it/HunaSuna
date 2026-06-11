@@ -1,4 +1,4 @@
----
+﻿---
 name: mobile-app
 description: Build, review, and plan the HunaSuna mobile application. Use when working on React Native, Expo, mobile screens, mobile API client, bearer session auth, SecureStore, mobile UX, or mobile release preparation.
 ---
@@ -13,11 +13,11 @@ description: Build, review, and plan the HunaSuna mobile application. Use when w
 
 ## Перед работой читать
 
-- `specification/15-мобильное-приложение.md`;
-- `specification/16-api-contract.md`;
-- `specification/17-мобильная-безопасность.md`;
-- `specification/12-технические-решения.md`;
-- `активные планы/01-мобильная-разработка.md`.
+- `specification/mobile-specs/15-мобильное-приложение.md`;
+- `specification/technical-specs/16-api-contract.md`;
+- `specification/mobile-specs/17-мобильная-безопасность.md`;
+- `specification/technical-specs/12-технические-решения.md`;
+- `completed-plans/04-мобильная-разработка.md`.
 
 ## Технические правила
 
@@ -27,6 +27,7 @@ description: Build, review, and plan the HunaSuna mobile application. Use when w
 - Использовать API из `app/api`.
 - Для защищенных запросов использовать `Authorization: Bearer <session token>`.
 - Хранить session token только в защищенном хранилище устройства.
+- В native-приложении использовать Expo SecureStore; в Expo Web/dev preview для проверки использовать только `sessionStorage`.
 - Не хранить `DATABASE_URL`, `CRON_SECRET` и серверные секреты в мобильном коде.
 
 ## Продуктовые правила

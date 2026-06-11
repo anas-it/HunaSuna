@@ -15,23 +15,10 @@ export function setUnauthorizedHandler(handler: (() => void | Promise<void>) | n
   unauthorizedHandler = handler;
 }
 
-function currentTimezone() {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch {
-    return undefined;
-  }
-}
-
 export async function apiRequest<T>(path: string, options: RequestOptions = {}) {
   const headers: Record<string, string> = {
     Accept: "application/json"
   };
-  const timezone = currentTimezone();
-
-  if (timezone) {
-    headers["X-HunaSuna-Timezone"] = timezone;
-  }
 
   if (options.body) {
     headers["Content-Type"] = "application/json";

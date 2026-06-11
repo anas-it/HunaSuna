@@ -19,6 +19,8 @@ type RegisterInput = {
   login: string;
   password: string;
   confirmPassword: string;
+  email?: string;
+  phone?: string;
   secretQuestion: string;
   secretAnswer: string;
 };
@@ -40,6 +42,11 @@ function normalizeLogin(value: string) {
   return value.trim().toLowerCase();
 }
 
+function normalizeEmail(value?: string) {
+  const email = value?.trim().toLowerCase();
+  return email || null;
+}
+
 function normalizeSecretAnswer(answer: string) {
   return answer.trim().toLowerCase();
 }
@@ -48,6 +55,7 @@ async function findUserForLogin(value: string) {
   const target = value.trim();
   const normalizedLogin = normalizeLogin(target);
   const normalizedPhone = normalizePhone(target);
+  const normalizedEmail = normalizeEmail(target);
 
   return prisma.user.findFirst({
     where: {
@@ -58,9 +66,16 @@ async function findUserForLogin(value: string) {
         {
           phone: normalizedPhone
         },
-        {
-          email: target
-        }
+        ...(normalizedEmail
+          ? [
+              {
+                email: {
+                  equals: normalizedEmail,
+                  mode: "insensitive" as const
+                }
+              }
+            ]
+          : [])
       ]
     }
   });
@@ -122,9 +137,13 @@ async function assertPasswordRecoveryAllowed(target: string, ipAddress?: string)
 export async function registerUser(input: RegisterInput, meta?: RequestMeta) {
   const data = registerSchema.parse({
     ...input,
-    login: input.login.trim()
+    login: input.login.trim(),
+    email: input.email,
+    phone: input.phone
   });
   const loginNormalized = normalizeLogin(data.login);
+  const phone = data.phone ? normalizePhone(data.phone) : null;
+  const email = normalizeEmail(data.email);
 
   const existingUser = await prisma.user.findUnique({
     where: {
@@ -136,13 +155,40 @@ export async function registerUser(input: RegisterInput, meta?: RequestMeta) {
     throw new Error("Пользователь с таким логином уже существует");
   }
 
+  if (phone) {
+    const existingPhone = await prisma.user.findUnique({
+      where: {
+        phone
+      }
+    });
+
+    if (existingPhone) {
+      throw new Error("Этот мобильный номер уже используется");
+    }
+  }
+
+  if (email) {
+    const existingEmail = await prisma.user.findFirst({
+      where: {
+        email: {
+          equals: email,
+          mode: "insensitive"
+        }
+      }
+    });
+
+    if (existingEmail) {
+      throw new Error("Этот email уже используется");
+    }
+  }
+
   const user = await prisma.user.create({
     data: {
       login: data.login,
       loginNormalized,
       passwordHash: hashPassword(data.password),
-      phone: null,
-      email: null,
+      phone,
+      email,
       secretQuestion: data.secretQuestion.trim(),
       secretAnswerHash: hashPassword(normalizeSecretAnswer(data.secretAnswer))
     }

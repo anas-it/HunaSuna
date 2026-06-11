@@ -35,7 +35,7 @@ export type ContactListItem = {
   whatsapp: string | null;
 };
 
-const contactListSelect = {
+export const contactListSelect = {
   id: true,
   firstName: true,
   lastName: true,
@@ -157,7 +157,8 @@ export async function getContact(userId: string, contactId: string) {
       id: contactId,
       userId,
       deletedAt: null
-    }
+    },
+    select: contactListSelect
   });
 
   if (!contact) {
@@ -185,7 +186,8 @@ export async function createContact(
       lastName: data.lastName.trim(),
       phone: data.phone,
       whatsapp: data.whatsapp
-    }
+    },
+    select: contactListSelect
   });
 
   await writeSecurityLog({
@@ -223,7 +225,8 @@ export async function updateContact(
       lastName: data.lastName.trim(),
       phone: data.phone,
       whatsapp: data.whatsapp ?? null
-    }
+    },
+    select: contactListSelect
   });
 
   await writeSecurityLog({

@@ -4,13 +4,13 @@ import type { MobileSession } from "../types/api";
 
 const SESSION_KEY = "hunasuna.mobileSession";
 
-function canUseWebStorage() {
-  return Platform.OS === "web" && typeof window !== "undefined" && Boolean(window.localStorage);
+function canUseWebSessionStorage() {
+  return Platform.OS === "web" && typeof window !== "undefined" && Boolean(window.sessionStorage);
 }
 
 export async function saveMobileSession(session: MobileSession) {
-  if (canUseWebStorage()) {
-    window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  if (canUseWebSessionStorage()) {
+    window.sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
     return;
   }
 
@@ -18,8 +18,8 @@ export async function saveMobileSession(session: MobileSession) {
 }
 
 export async function loadMobileSession() {
-  const value = canUseWebStorage()
-    ? window.localStorage.getItem(SESSION_KEY)
+  const value = canUseWebSessionStorage()
+    ? window.sessionStorage.getItem(SESSION_KEY)
     : await SecureStore.getItemAsync(SESSION_KEY);
 
   if (!value) {
@@ -35,8 +35,8 @@ export async function loadMobileSession() {
 }
 
 export async function clearMobileSession() {
-  if (canUseWebStorage()) {
-    window.localStorage.removeItem(SESSION_KEY);
+  if (canUseWebSessionStorage()) {
+    window.sessionStorage.removeItem(SESSION_KEY);
     return;
   }
 
