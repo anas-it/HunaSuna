@@ -20,6 +20,7 @@ type RevealSensitiveDataResult =
     };
 
 type SettingsPanelProps = {
+  deleteAccountAction: (formData: FormData) => void | Promise<void>;
   hasEmail: boolean;
   revealSensitiveDataAction: (formData: FormData) => Promise<RevealSensitiveDataResult>;
   updateEmailAction: (formData: FormData) => void | Promise<void>;
@@ -28,6 +29,7 @@ type SettingsPanelProps = {
   user: {
     firstName: string | null;
     lastName: string | null;
+    secretQuestion: string | null;
   };
 };
 
@@ -74,6 +76,7 @@ function SensitiveField({
 }
 
 export function SettingsPanel({
+  deleteAccountAction,
   hasEmail,
   revealSensitiveDataAction,
   updateEmailAction,
@@ -81,7 +84,7 @@ export function SettingsPanel({
   updateProfileAction,
   user
 }: SettingsPanelProps) {
-  const [modal, setModal] = useState<"password" | "email" | "reveal" | null>(null);
+  const [modal, setModal] = useState<"password" | "email" | "reveal" | "delete" | null>(null);
   const [sensitiveData, setSensitiveData] = useState<SensitiveData | null>(null);
   const [revealError, setRevealError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -173,6 +176,14 @@ export function SettingsPanel({
             <Button type="button" variant="secondary" onClick={() => setModal("email")}>
               Сменить E-mail
             </Button>
+            <Button
+              className="border-[#f3c2bd] text-[#b42318] hover:bg-[#fff5f5]"
+              type="button"
+              variant="secondary"
+              onClick={() => setModal("delete")}
+            >
+              Удалить аккаунт
+            </Button>
           </div>
         </section>
       </div>
@@ -251,6 +262,58 @@ export function SettingsPanel({
                   Отмена
                 </Button>
                 <Button>Сохранить</Button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
+
+      {modal === "delete" ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+          onClick={() => setModal(null)}
+        >
+          <section
+            aria-modal="true"
+            className="w-full max-w-md rounded-lg border border-[#d8dee8] bg-white p-5 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+          >
+            <h3 className="text-lg font-semibold text-[#1f2937]">Удаление аккаунта</h3>
+            <p className="mt-2 text-sm leading-6 text-[#64748b]">
+              Аккаунт, контакты, записи и активные сессии будут удалены. Это действие нельзя отменить через интерфейс.
+            </p>
+            <form action={deleteAccountAction} className="mt-5 grid gap-4">
+              <div className="grid gap-2 rounded-md border border-[#d8dee8] bg-[#f8fafc] p-3 text-sm">
+                <span className="font-medium text-[#1f2937]">Секретный вопрос</span>
+                <p className="break-words text-[#475569]">
+                  {user.secretQuestion ?? "Секретный вопрос не настроен"}
+                </p>
+              </div>
+              <label className="grid gap-2 text-sm font-medium">
+                Ответ на секретный вопрос
+                <input
+                  autoFocus
+                  className="rounded-md border border-[#cbd5e1] px-3 py-2"
+                  name="secretAnswer"
+                  required
+                  type="password"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium">
+                Подтверждение
+                <input
+                  className="rounded-md border border-[#cbd5e1] px-3 py-2"
+                  name="confirmation"
+                  placeholder="Введите УДАЛИТЬ АККАУНТ"
+                  required
+                />
+              </label>
+              <div className="flex justify-end gap-3">
+                <Button type="button" variant="secondary" onClick={() => setModal(null)}>
+                  Отмена
+                </Button>
+                <Button variant="destructive">Удалить аккаунт</Button>
               </div>
             </form>
           </section>

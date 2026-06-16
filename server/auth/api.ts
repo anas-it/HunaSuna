@@ -82,6 +82,7 @@ function isPrismaError(error: unknown) {
 const validationFieldLabels: Record<string, string> = {
   amount: "Сумма",
   confirmPassword: "Подтверждение пароля",
+  confirmation: "Подтверждение",
   currency: "Валюта",
   currentEmail: "Текущий email",
   currentPassword: "Текущий пароль",

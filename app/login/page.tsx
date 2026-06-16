@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { redirectAuthenticatedUser } from "@/server/auth/session";
 
 type LoginPageProps = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; message?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -29,7 +29,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           Войдите в свой аккаунт, чтобы открыть контакты и записи.
         </p>
 
-        <Notice error={params.error} />
+        <Notice error={params.error} message={params.message} />
 
         <form action={loginAction} className="mt-6 grid gap-4">
           <input

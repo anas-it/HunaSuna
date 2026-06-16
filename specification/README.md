@@ -63,6 +63,7 @@
 | --- | --- | --- | --- |
 | `plans/active-plans/README.md` | `working-plan-index` | plans/active-plans | Навигация по текущим рабочим планам. |
 | `plans/active-plans/01-app-store-публикация.md` | `working-plan` | активен | Пошаговый план публикации мобильного приложения HunaSuna в App Store. |
+| `plans/active-plans/02-удаление-аккаунта.md` | `working-plan` | активен | План добавления удаления собственного аккаунта в web и mobile через личный кабинет. |
 | `plans/completed-plans/04-мобильная-разработка.md` | `working-plan` | завершен | История разработки мобильного приложения. |
 | `plans/completed-plans/01-подготовка-спецификаций.md` | `working-plan` | завершен | История подготовки базовых спецификаций. |
 | `plans/completed-plans/02-базовая-web-разработка.md` | `working-plan` | завершен | История базовой web-разработки. |

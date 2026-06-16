@@ -1,14 +1,24 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/server/db/prisma";
+import { LOGIN_BLOCK_MINUTES, MAX_FAILED_LOGIN_ATTEMPTS } from "@/lib/constants";
+import { addMinutes } from "@/lib/date";
 import { normalizePhone } from "@/lib/phone";
 import { hashPassword, verifyPassword } from "@/server/auth/password";
 import { writeSecurityLog } from "@/server/logs/security-log.service";
-import { settingsSchema } from "@/server/validators/settings.validator";
+import {
+  deleteAccountSchema,
+  settingsSchema
+} from "@/server/validators/settings.validator";
 
 type UpdateUserProfileInput = {
   firstName?: string;
   lastName?: string;
   phone?: string;
+};
+
+type DeleteCurrentUserAccountInput = {
+  secretAnswer: string;
+  confirmation: string;
 };
 
 const userProfileSelect = {
@@ -17,8 +27,61 @@ const userProfileSelect = {
   firstName: true,
   lastName: true,
   phone: true,
-  email: true
+  email: true,
+  secretQuestion: true
 } satisfies Prisma.UserSelect;
+
+function loginTarget(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function accountDeleteAttemptTarget(userId: string) {
+  return `account-delete:${userId}`;
+}
+
+function recoveryAttemptTarget(value: string) {
+  return `password-recovery:${loginTarget(value)}`;
+}
+
+function normalizeSecretAnswer(answer: string) {
+  return answer.trim().toLowerCase();
+}
+
+async function assertAccountDeleteAllowed(userId: string, ipAddress?: string) {
+  const since = addMinutes(new Date(), -LOGIN_BLOCK_MINUTES);
+
+  const failedAttempts = await prisma.loginAttempt.count({
+    where: {
+      target: accountDeleteAttemptTarget(userId),
+      ipAddress,
+      success: false,
+      createdAt: {
+        gte: since
+      }
+    }
+  });
+
+  if (failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
+    throw new Error(
+      "Слишком много неправильных ответов. Попробуйте через 30 минут."
+    );
+  }
+}
+
+async function recordAccountDeleteAttempt(input: {
+  userId: string;
+  ipAddress?: string;
+  success: boolean;
+}) {
+  await prisma.loginAttempt.create({
+    data: {
+      userId: input.userId,
+      target: accountDeleteAttemptTarget(input.userId),
+      ipAddress: input.ipAddress,
+      success: input.success
+    }
+  });
+}
 
 export async function getUserProfile(userId: string) {
   return prisma.user.findUnique({
@@ -255,4 +318,104 @@ export async function revealUserSensitiveData(
     email: user.email,
     phone: user.phone
   };
+}
+
+export async function deleteCurrentUserAccount(
+  userId: string,
+  input: DeleteCurrentUserAccountInput,
+  meta?: { ipAddress?: string }
+) {
+  const data = deleteAccountSchema.parse(input);
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId
+    },
+    select: {
+      id: true,
+      login: true,
+      loginNormalized: true,
+      phone: true,
+      email: true,
+      secretQuestion: true,
+      secretAnswerHash: true
+    }
+  });
+
+  if (!user) {
+    throw new Error("Пользователь не найден");
+  }
+
+  if (!user.secretQuestion || !user.secretAnswerHash) {
+    throw new Error("Для аккаунта не настроен секретный вопрос");
+  }
+
+  await assertAccountDeleteAllowed(user.id, meta?.ipAddress);
+
+  if (
+    !verifyPassword(
+      normalizeSecretAnswer(data.secretAnswer),
+      user.secretAnswerHash
+    )
+  ) {
+    await recordAccountDeleteAttempt({
+      userId: user.id,
+      ipAddress: meta?.ipAddress,
+      success: false
+    });
+
+    await writeSecurityLog({
+      action: "account_delete_failed",
+      userId: user.id,
+      ipAddress: meta?.ipAddress,
+      metadata: {
+        reason: "secret_answer"
+      }
+    });
+
+    throw new Error("Неверный секретный ответ");
+  }
+
+  const userTargets = [user.login, user.loginNormalized, user.phone, user.email]
+    .filter((value): value is string => Boolean(value))
+    .map(loginTarget);
+  const loginAttemptTargets = Array.from(
+    new Set([
+      ...userTargets,
+      ...userTargets.map(recoveryAttemptTarget),
+      accountDeleteAttemptTarget(user.id)
+    ])
+  );
+
+  await prisma.$transaction([
+    prisma.securityLog.create({
+      data: {
+        action: "account_deleted",
+        userId: user.id,
+        ipAddress: meta?.ipAddress,
+        metadata: {
+          reason: "user_request"
+        }
+      }
+    }),
+    prisma.loginAttempt.deleteMany({
+      where: {
+        OR: [
+          {
+            userId: user.id
+          },
+          {
+            target: {
+              in: loginAttemptTargets
+            }
+          }
+        ]
+      }
+    }),
+    prisma.user.delete({
+      where: {
+        id: user.id
+      }
+    })
+  ]);
 }

@@ -1,4 +1,5 @@
 import {
+  deleteAccountAction,
   revealSensitiveSettingsAction,
   updateEmailAction,
   updatePasswordAction,
@@ -27,6 +28,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     <PageShell title="Настройки">
       <Notice error={params.error} />
       <SettingsPanel
+        deleteAccountAction={deleteAccountAction}
         hasEmail={Boolean(user.email)}
         revealSensitiveDataAction={revealSensitiveSettingsAction}
         updateEmailAction={updateEmailAction}
@@ -34,7 +36,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
         updateProfileAction={updateSettingsAction}
         user={{
           firstName: user.firstName,
-          lastName: user.lastName
+          lastName: user.lastName,
+          secretQuestion: user.secretQuestion
         }}
       />
     </PageShell>

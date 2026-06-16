@@ -26,6 +26,7 @@ import {
   updateRecord
 } from "@/server/services/record.service";
 import {
+  deleteCurrentUserAccount,
   revealUserSensitiveData,
   updateUserEmail,
   updateUserPassword,
@@ -48,6 +49,7 @@ function checked(formData: FormData, key: string) {
 const validationFieldLabels: Record<string, string> = {
   amount: "Сумма",
   confirmPassword: "Подтверждение пароля",
+  confirmation: "Подтверждение",
   contactId: "Контакт",
   currency: "Валюта",
   currentEmail: "Текущий email",
@@ -492,4 +494,27 @@ export async function revealSensitiveSettingsAction(formData: FormData) {
       error: errorMessage(error)
     };
   }
+}
+
+export async function deleteAccountAction(formData: FormData) {
+  let nextPath = "/login";
+
+  try {
+    const user = await requirePageUser();
+    const meta = await getRequestMeta();
+    await deleteCurrentUserAccount(
+      user.id,
+      {
+        secretAnswer: text(formData, "secretAnswer"),
+        confirmation: text(formData, "confirmation")
+      },
+      meta
+    );
+    await destroyCurrentSession();
+    nextPath = withMessage("/login", "Аккаунт удален");
+  } catch (error) {
+    nextPath = withError("/settings", error);
+  }
+
+  redirect(nextPath);
 }

@@ -18,6 +18,8 @@ export type SecurityLogAction =
   | "record_favorite_added"
   | "record_favorite_removed"
   | "record_restored"
+  | "account_delete_failed"
+  | "account_deleted"
   | "account_updated"
   | "sensitive_data_viewed";
 
