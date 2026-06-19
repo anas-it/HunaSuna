@@ -19,9 +19,9 @@
 - httpOnly cookie для web-сессии;
 - bearer session token для мобильного приложения через `Authorization: Bearer <token>`;
 - хеширование session token в базе;
-- `server/auth/session.ts` для создания, получения и удаления сессии;
-- `server/auth/api.ts` для проверки API-запросов;
-- `server/services/auth.service.ts` для регистрации, входа и восстановления доступа.
+- `Web-Project/server/auth/session.ts` для создания, получения и удаления сессии;
+- `Web-Project/server/auth/api.ts` для проверки API-запросов;
+- `Web-Project/server/services/auth.service.ts` для регистрации, входа и восстановления доступа.
 
 Better Auth не используется как обязательный механизм первой версии. Его можно рассмотреть позже, если появится реальная необходимость.
 
@@ -78,7 +78,7 @@ Cron endpoint должен быть защищен через секретный
 
 ## Проверка данных
 
-Для проверки входящих данных использовать validators в `server/validators`.
+Для проверки входящих данных использовать validators в `Web-Project/server/validators`.
 
 Проверять:
 

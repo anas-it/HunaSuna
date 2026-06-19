@@ -1,6 +1,6 @@
 ﻿# Mobile HunaSuna
 
-`mobile/` содержит Expo React Native приложение HunaSuna. Приложение использует общий backend web-проекта и не имеет отдельного сервера.
+`Mobile-App/` содержит Expo React Native приложение HunaSuna. Приложение использует общий backend из `../Web-Project/` и не имеет отдельного сервера.
 
 ## Главные файлы
 

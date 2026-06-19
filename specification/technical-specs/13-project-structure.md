@@ -1,57 +1,160 @@
-﻿# Структура проекта HunaSuna
+# Структура проекта HunaSuna
 
 ## Назначение документа
 
-Этот документ описывает, как должна быть организована структура кода HunaSuna.
+Этот документ описывает, как организована структура кода HunaSuna после разделения web-сайта и мобильного приложения.
 
-Цель - заранее договориться, где будут страницы, API, бизнес-логика, база данных, компоненты и фоновые задачи.
+Цель - держать два приложения отдельно, но оставить общие спеки, планы, скилы и правила в корне проекта.
 
 ## Главный принцип
 
 Код должен быть разделен по ответственности:
 
-- интерфейс отвечает за отображение;
-- API принимает запросы и возвращает ответы;
-- services содержат бизнес-логику;
-- db отвечает за базу данных;
-- auth отвечает за авторизацию и доступ;
-- validators проверяют входящие данные;
-- jobs выполняют фоновые задачи.
+- `Web-Project/` отвечает за web-сайт, общий backend API, Prisma и web-деплой;
+- `Mobile-App/` отвечает за Expo React Native приложение;
+- `specification/`, `plans/`, `skills/`, `.agents/`, `.skills/`, `AGENTS.md`, `CHANGELOG.md` и корневой `README.md` остаются в корне `SAID`.
 
 Важную бизнес-логику нельзя держать только в UI-компонентах или прямо внутри route-файлов.
 
 ## Корень проекта
 
-В корне проекта должны быть:
+В корне `SAID` должны быть:
 
-- `.agents`;
-- `.skills`;
-- `.vscode`;
-- `README.md`;
-- `app`;
-- `components`;
-- `server`;
-- `mobile`;
-- `lib`;
-- `prisma`;
-- `public`;
-- `specification`;
-- `skills`;
-- `plans`;
+- `.agents/`;
+- `.skills/`;
+- `.vscode/`;
+- `Web-Project/`;
+- `Mobile-App/`;
+- `specification/`;
+- `skills/`;
+- `plans/`;
 - `AGENTS.md`;
 - `CHANGELOG.md`;
-- `.env`;
-- `.env.example`;
-- `package.json`;
-- `next.config.ts`;
-- `tsconfig.json`;
-- `postcss.config.mjs`.
+- `README.md`;
+- `.gitignore`.
 
-Проект использует Tailwind CSS 4 через PostCSS и `app/globals.css`, поэтому отдельный `tailwind.config.ts` не обязателен, пока не понадобится кастомная конфигурация.
+В корне не должны лежать рабочие папки web-кода вроде `app/`, `components/`, `server/`, `lib/`, `prisma/`, `public/`, `scripts/` и web `package.json`. Они должны находиться внутри `Web-Project/`.
 
 Папки `.agents` и `.skills` являются навигационными входами для удобства в редакторе. Главный файл правил агента остается `AGENTS.md`, а рабочие скилы остаются в `skills/`.
 
-Папка `.vscode` хранит настройки рабочего пространства, которые скрывают служебные кэши, логи и зависимости из Explorer, но не удаляют их с диска.
+## Web-Project
+
+`Web-Project/` содержит Next.js web-сайт и общий backend, который используют web и mobile.
+
+Рекомендуемая структура:
+
+- `Web-Project/app` - страницы Next.js, route handlers и server actions;
+- `Web-Project/app/api` - API endpoints для web и mobile;
+- `Web-Project/components` - web UI-компоненты;
+- `Web-Project/server/services` - бизнес-логика;
+- `Web-Project/server/db` - работа с базой данных;
+- `Web-Project/server/auth` - авторизация и проверка доступа;
+- `Web-Project/server/validators` - проверка входящих данных;
+- `Web-Project/server/jobs` - фоновые задачи;
+- `Web-Project/server/logs` - технические логи безопасности;
+- `Web-Project/lib` - общие web/backend helpers без бизнес-логики;
+- `Web-Project/prisma` - Prisma schema и миграции;
+- `Web-Project/public` - статичные файлы web-приложения;
+- `Web-Project/scripts` - ручные технические скрипты;
+- `Web-Project/package.json` - команды web-проекта;
+- `Web-Project/vercel.json` - настройки Vercel Cron Jobs.
+
+Команды web-проекта нужно запускать из `Web-Project/`:
+
+```powershell
+cd Web-Project
+npm run dev
+npm run lint
+npm run build
+```
+
+Для деплоя на Vercel корневую папку проекта в настройках Vercel нужно указать как `Web-Project`.
+
+## Web: app
+
+`Web-Project/app` отвечает за страницы Next.js и маршруты приложения.
+
+Рекомендуемая структура:
+
+- `Web-Project/app/page.tsx` - приветствие или входная страница;
+- `Web-Project/app/register/page.tsx` - регистрация;
+- `Web-Project/app/login/page.tsx` - вход;
+- `Web-Project/app/forgot-password/page.tsx` - восстановление пароля;
+- `Web-Project/app/dashboard/page.tsx` - главная после входа;
+- `Web-Project/app/contacts/page.tsx` - список контактов;
+- `Web-Project/app/contacts/[id]/page.tsx` - просмотр контакта;
+- `Web-Project/app/records/page.tsx` - история записей;
+- `Web-Project/app/records/new/page.tsx` - создание записи;
+- `Web-Project/app/records/[id]/page.tsx` - просмотр записи;
+- `Web-Project/app/deleted/page.tsx` - удаленные записи;
+- `Web-Project/app/settings/page.tsx` - личный кабинет и настройки.
+
+## Web: app/api
+
+`Web-Project/app/api` отвечает за API endpoints.
+
+Рекомендуемая структура:
+
+- `Web-Project/app/api/auth/route.ts` - регистрация, вход, выход и восстановление;
+- `Web-Project/app/api/users/me/route.ts` - данные текущего пользователя и удаление собственного аккаунта;
+- `Web-Project/app/api/settings/route.ts` - изменение пароля, имени, фамилии, email и мобильного номера;
+- `Web-Project/app/api/contacts/route.ts` - список и создание контактов;
+- `Web-Project/app/api/contacts/[id]/route.ts` - просмотр, редактирование и удаление контакта;
+- `Web-Project/app/api/records/route.ts` - список и создание записей;
+- `Web-Project/app/api/records/[id]/route.ts` - просмотр, редактирование и удаление записи;
+- `Web-Project/app/api/deleted-records/route.ts` - список удаленных записей;
+- `Web-Project/app/api/deleted-records/[id]/restore/route.ts` - восстановление удаленной записи;
+- `Web-Project/app/api/search/route.ts` - поиск по контакту и номеру телефона;
+- `Web-Project/app/api/cron/deleted-records/route.ts` - фоновое архивирование удаленных записей после срока восстановления.
+
+Route-файлы должны быть тонкими: принять запрос, проверить пользователя, вызвать service и вернуть ответ.
+
+## Web: server
+
+`Web-Project/server` отвечает за серверную часть проекта.
+
+Рекомендуемая структура:
+
+- `Web-Project/server/services`;
+- `Web-Project/server/db`;
+- `Web-Project/server/auth`;
+- `Web-Project/server/validators`;
+- `Web-Project/server/jobs`;
+- `Web-Project/server/logs`.
+
+Services должны проверять правила проекта:
+
+- пользователь видит только свои данные;
+- удаленную запись нельзя редактировать;
+- запись можно восстановить только 7 дней;
+- архивные записи не доступны обычному пользователю;
+- старые записи не меняются после изменения или удаления контакта;
+- пользователь может удалить только свой текущий аккаунт после ответа на секретный вопрос.
+
+## Mobile-App
+
+`Mobile-App/` содержит мобильное приложение HunaSuna.
+
+Рекомендуемая структура:
+
+- `Mobile-App/App.tsx` - точка входа приложения;
+- `Mobile-App/src/api` - клиент API;
+- `Mobile-App/src/auth` - хранение и проверка мобильной сессии;
+- `Mobile-App/src/screens` - экраны приложения;
+- `Mobile-App/src/components` - мобильные UI-компоненты;
+- `Mobile-App/src/config` - настройки API URL и окружения;
+- `Mobile-App/app.json` - Expo config;
+- `Mobile-App/eas.json` - EAS Build/Submit profiles.
+
+Мобильное приложение не должно иметь отдельный backend и не должно хранить серверные секреты.
+
+Команды мобильного приложения нужно запускать из `Mobile-App/`:
+
+```powershell
+cd Mobile-App
+npx tsc --noEmit
+npx expo start
+```
 
 ## Папки планов
 
@@ -76,225 +179,11 @@
 - `specification/mobile-specs` - мобильное приложение и мобильная безопасность;
 - `specification/planning-specs` - постоянные планы, которые являются частью спецификаций.
 
-В каждой группе должен быть `README.md` с коротким объяснением, какие файлы там лежат.
-
-## Папка app
-
-Папка `app` отвечает за страницы Next.js и маршруты приложения.
-
-Рекомендуемая структура:
-
-- `app/page.tsx` - приветствие или входная страница;
-- `app/register/page.tsx` - регистрация;
-- `app/login/page.tsx` - вход;
-- `app/forgot-password/page.tsx` - восстановление пароля;
-- `app/dashboard/page.tsx` - главная после входа;
-- `app/contacts/page.tsx` - список контактов;
-- `app/contacts/[id]/page.tsx` - просмотр контакта;
-- `app/records/page.tsx` - история записей;
-- `app/records/new/page.tsx` - создание записи;
-- `app/records/[id]/page.tsx` - просмотр записи;
-- `app/deleted/page.tsx` - удаленные записи;
-- `app/settings/page.tsx` - личный кабинет и настройки.
-
-## Папка app/api
-
-Папка `app/api` отвечает за API endpoints.
-
-Рекомендуемая структура:
-
-- `app/api/auth/route.ts` - регистрация, вход, выход и восстановление;
-- `app/api/users/me/route.ts` - данные текущего пользователя и удаление собственного аккаунта;
-- `app/api/settings/route.ts` - изменение пароля, имени, фамилии, email и мобильного номера;
-- `app/api/contacts/route.ts` - список и создание контактов;
-- `app/api/contacts/[id]/route.ts` - просмотр, редактирование и удаление контакта;
-- `app/api/records/route.ts` - список и создание записей;
-- `app/api/records/[id]/route.ts` - просмотр, редактирование и удаление записи;
-- `app/api/deleted-records/route.ts` - список удаленных записей;
-- `app/api/deleted-records/[id]/restore/route.ts` - восстановление удаленной записи;
-- `app/api/search/route.ts` - поиск по контакту и номеру телефона;
-- `app/api/cron/deleted-records/route.ts` - фоновое архивирование удаленных записей после срока восстановления.
-
-Route-файлы должны быть тонкими: принять запрос, проверить пользователя, вызвать service и вернуть ответ.
-
-## Папка components
-
-Папка `components` отвечает за UI-компоненты.
-
-Рекомендуемая структура:
-
-- `components/ui` - компоненты shadcn/ui;
-- `components/layout` - layout, header, navigation, sidebar;
-- `components/forms` - общие помощники форм;
-- `components/contacts` - компоненты контактов;
-- `components/records` - компоненты записей;
-- `components/settings` - компоненты личного кабинета.
-
-Отдельные папки для auth и search создавать только тогда, когда появятся переиспользуемые компоненты авторизации или поиска. Если форма живет только на одной странице и не переиспользуется, отдельная папка не нужна.
-
-Компоненты должны быть простыми и не должны содержать бизнес-логику доступа к чужим данным.
-
-## Папка server
-
-Папка `server` отвечает за серверную часть проекта.
-
-Рекомендуемая структура:
-
-- `server/services`;
-- `server/db`;
-- `server/auth`;
-- `server/validators`;
-- `server/jobs`;
-- `server/logs`.
-
-## server/services
-
-Здесь должна находиться бизнес-логика HunaSuna.
-
-Рекомендуемые файлы:
-
-- `server/services/auth.service.ts`;
-- `server/services/dashboard.service.ts`;
-- `server/services/user.service.ts`;
-- `server/services/contact.service.ts`;
-- `server/services/record.service.ts`;
-- `server/services/deleted-record.service.ts`;
-- `server/services/search.service.ts`;
-- `server/services/archive.service.ts`.
-
-Services должны проверять правила проекта:
-
-- пользователь видит только свои данные;
-- удаленную запись нельзя редактировать;
-- запись можно восстановить только 7 дней;
-- архивные записи не доступны обычному пользователю;
-- старые записи не меняются после изменения или удаления контакта;
-- пользователь может удалить только свой текущий аккаунт после ответа на секретный вопрос.
-
-## server/db
-
-Здесь должна быть работа с базой данных.
-
-Рекомендуемые файлы:
-
-- `server/db/prisma.ts` - Prisma client;
-
-Прямую работу с базой лучше не размазывать по UI-компонентам.
-
-Отдельную папку для сложных db-запросов создавать только при появлении повторяемых запросов. Пока достаточно `server/db/prisma.ts` и бизнес-логики в `server/services`.
-
-## server/auth
-
-Здесь должна быть логика авторизации и доступа.
-
-Рекомендуемые файлы:
-
-- `server/auth/auth.ts` - краткая фиксация выбранного подхода к авторизации;
-- `server/auth/session.ts` - получение текущего пользователя;
-- `server/auth/permissions.ts` - проверка доступа к данным.
-
-Каждое действие с контактами и записями должно проверять `user_id`.
-
-## server/validators
-
-Здесь должна быть проверка входящих данных.
-
-Рекомендуемые файлы:
-
-- `server/validators/auth.validator.ts`;
-- `server/validators/contact.validator.ts`;
-- `server/validators/record.validator.ts`;
-- `server/validators/settings.validator.ts`;
-- `server/validators/search.validator.ts`.
-
-Validators должны проверять обязательные поля, номер телефона и допустимые действия.
-
-## server/jobs
-
-Здесь должны быть фоновые задачи.
-
-Рекомендуемые файлы:
-
-- `server/jobs/archive-expired-deleted-records.job.ts`.
-
-Фоновые задачи должны:
-
-- находить удаленные записи старше 7 дней;
-- скрывать их из пользовательского интерфейса;
-- переносить или копировать их в технический архив;
-- оставлять архивные записи в техническом архиве базы данных без пользовательского доступа.
-
-## server/logs
-
-Здесь должна быть логика технических логов.
-
-Рекомендуемые файлы:
-
-- `server/logs/security-log.service.ts`.
-
-Нужно логировать:
-
-- вход;
-- ошибки входа;
-- восстановление пароля;
-- создание записи;
-- редактирование записи;
-- удаление записи;
-- восстановление записи;
-- изменение данных аккаунта;
-- удаление аккаунта.
-
-## Папка prisma
-
-Папка `prisma` отвечает за Prisma schema и миграции.
-
-Рекомендуемая структура:
-
-- `prisma/schema.prisma`;
-- `prisma/migrations`.
-
-В `schema.prisma` должны быть модели пользователей, сессий, попыток входа, контактов, записей, логов и архивных записей. Восстановление пароля через секретный вопрос и ответ хранится в модели пользователя.
-
-## Папка mobile
-
-Папка `mobile` отвечает за мобильное приложение HunaSuna.
-
-Рекомендуемая структура:
-
-- `mobile/App.tsx` - точка входа приложения;
-- `mobile/src/api` - клиент API;
-- `mobile/src/auth` - хранение и проверка мобильной сессии;
-- `mobile/src/screens` - экраны приложения;
-- `mobile/src/components` - мобильные UI-компоненты;
-- `mobile/src/config` - настройки API URL и окружения.
-
-Мобильное приложение не должно иметь отдельный backend и не должно хранить серверные секреты.
-
-Если навигация остается простой, она может жить в `mobile/App.tsx`, а общие типы - в `mobile/src/types/navigation.ts`. Отдельную папку navigation создавать только при появлении отдельного navigation layer.
-
-## Папка lib
-
-Папка `lib` нужна для общих помощников.
-
-Рекомендуемые файлы:
-
-- `lib/utils.ts`;
-- `lib/date.ts`;
-- `lib/phone.ts`;
-- `lib/pagination.ts`;
-- `lib/constants.ts`.
-
-В `lib` не нужно хранить бизнес-логику HunaSuna.
-
-Пагинация, лимиты и общие технические константы должны быть вынесены в общие помощники, чтобы web-страницы и API работали одинаково.
-
 ## Переменные окружения
 
-В `.env.example` нужно заранее описать:
+Web-переменные окружения лежат в `Web-Project/.env` и пример - в `Web-Project/.env.example`.
 
-- `DATABASE_URL`;
-- `CRON_SECRET`;
-- переменные мобильного приложения для API URL, если мобильный проект требует отдельный `.env`.
+Мобильные публичные переменные окружения лежат в `Mobile-App/.env.local`, а пример - в `Mobile-App/.env.example`.
 
 Настоящие секреты нельзя хранить в GitHub.
 
@@ -302,9 +191,11 @@ Validators должны проверять обязательные поля, н
 
 Нельзя:
 
+- возвращать web-папки `app/`, `components/`, `server/`, `lib/`, `prisma/`, `public/` и `scripts/` в корень `SAID`;
 - хранить бизнес-логику только в UI;
 - писать всю логику прямо в API route;
 - смешивать работу с базой, интерфейс и проверки доступа в одном файле;
 - отдавать клиенту лишние поля;
 - делать отдельный backend только для мобильного приложения;
 - добавлять удаление чужих аккаунтов или удаление аккаунта без проверки текущей сессии и секретного ответа.
+

@@ -22,18 +22,18 @@
 
 ## Шаг 1: Проверить локальную готовность проекта
 
-- Проверить `mobile/app.json`:
+- Проверить `Mobile-App/app.json`:
   - `name`: `HunaSuna`;
   - `ios.bundleIdentifier`: `pro.hunasuna.mobile`;
   - `ios.infoPlist.ITSAppUsesNonExemptEncryption`: `false`;
   - `extra.eas.projectId` заполнен.
-- Проверить `mobile/eas.json`:
+- Проверить `Mobile-App/eas.json`:
   - есть `build.production`;
   - есть `submit.production`.
 - Выполнить:
 
 ```powershell
-cd mobile
+cd Mobile-App
 npx expo-doctor
 npx tsc --noEmit
 npx expo config --json
@@ -44,7 +44,7 @@ npx expo config --json
 - Expo account должен быть залогинен:
 
 ```powershell
-cd mobile
+cd Mobile-App
 npx eas-cli@latest whoami
 ```
 
@@ -76,7 +76,7 @@ npx eas-cli@latest whoami
 
 ## Шаг 4: Подготовить App Store metadata
 
-Использовать `mobile/store-listing.md` как основу.
+Использовать `Mobile-App/store-listing.md` как основу.
 
 Минимально заполнить:
 
@@ -113,7 +113,7 @@ HunaSuna is an information accounting tool for transfer records. The app does no
 ## Шаг 6: Собрать production iOS build
 
 ```powershell
-cd mobile
+cd Mobile-App
 npx eas-cli@latest build --platform ios --profile production
 ```
 
@@ -133,7 +133,7 @@ npx eas-cli@latest build --platform ios --profile production
 Можно отправить через EAS:
 
 ```powershell
-cd mobile
+cd Mobile-App
 npx eas-cli@latest submit --platform ios --profile production
 ```
 
@@ -158,12 +158,12 @@ npx eas-cli@latest submit --platform ios --profile production
 
 - `npx eas-cli@latest whoami` показывает Expo account `hunasuna` и owner-доступ к `hunasuna-smr`.
 - `npx expo-doctor` прошел без ошибок.
-- `npx tsc --noEmit` в `mobile/` прошел без ошибок.
+- `npx tsc --noEmit` в `Mobile-App/` прошел без ошибок.
 - `npx expo config --json` показывает SDK `54.0.0`, Bundle ID `pro.hunasuna.mobile` и EAS project id.
 - `https://hunasuna.pro/privacy` и `https://hunasuna.pro/api/auth` отвечают `200 OK`.
-- В `mobile/eas.json` production build привязан к EAS environment `production`.
+- В `Mobile-App/eas.json` production build привязан к EAS environment `production`.
 - В EAS production environment созданы `EXPO_PUBLIC_API_BASE_URL=https://hunasuna.pro` и `EXPO_PUBLIC_WEB_API_BASE_URL=https://hunasuna.pro`.
-- В `mobile/app.json` отключен `ios.supportsTablet`, чтобы первый App Store release был только для iPhone.
+- В `Mobile-App/app.json` отключен `ios.supportsTablet`, чтобы первый App Store release был только для iPhone.
 
 ## Открытые вопросы перед сборкой
 

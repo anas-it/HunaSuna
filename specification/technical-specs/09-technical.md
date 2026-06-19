@@ -26,7 +26,7 @@ Frontend HunaSuna должен быть сделан на Next.js.
 ## Backend
 Backend HunaSuna должен быть частью Next.js-приложения.
 
-Для первой версии backend нужно делать через Route Handlers Next.js в папке `app/api`.
+Для первой версии backend нужно делать через Route Handlers Next.js в папке `Web-Project/app/api`.
 
 Route Handlers должны только принимать запрос, проверять пользователя, вызывать нужную бизнес-логику и возвращать ответ.
 
@@ -34,12 +34,12 @@ Route Handlers должны только принимать запрос, про
 
 Рекомендуемая структура backend:
 
-- `app/api` - публичные API endpoints для сайта и будущего мобильного приложения;
-- `server/services` - бизнес-логика HunaSuna;
-- `server/db` - работа с базой данных;
-- `server/auth` - авторизация, сессии, проверка доступа;
-- `server/validators` - проверка входящих данных;
-- `server/jobs` - фоновые задачи, например очистка удаленных записей.
+- `Web-Project/app/api` - публичные API endpoints для сайта и мобильного приложения;
+- `Web-Project/server/services` - бизнес-логика HunaSuna;
+- `Web-Project/server/db` - работа с базой данных;
+- `Web-Project/server/auth` - авторизация, сессии, проверка доступа;
+- `Web-Project/server/validators` - проверка входящих данных;
+- `Web-Project/server/jobs` - фоновые задачи, например очистка удаленных записей.
 
 Backend отвечает за:
 

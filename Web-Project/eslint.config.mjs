@@ -11,7 +11,6 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "dist/**",
-      "mobile/metro.config.js",
       "next-env.d.ts"
     ]
   }

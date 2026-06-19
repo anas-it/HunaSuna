@@ -48,8 +48,10 @@ HunaSuna - это инструмент учета информации о пер
 ## Технические правила
 
 - Основной framework - Next.js.
-- Backend первой версии - Route Handlers Next.js в `app/api`.
-- Бизнес-логику выносить в `server/services`.
+- Web-проект хранится в `Web-Project/`.
+- Мобильное приложение хранится в `Mobile-App/`.
+- Backend первой версии - Route Handlers Next.js в `Web-Project/app/api`.
+- Бизнес-логику выносить в `Web-Project/server/services`.
 - Работу с базой держать отдельно от интерфейса.
 - API проектировать так, чтобы его могла использовать web-версия и будущее мобильное приложение.
 - База данных - PostgreSQL.

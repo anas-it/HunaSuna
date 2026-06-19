@@ -1,4 +1,11 @@
-﻿# Changelog
+# Changelog
+
+## 2026-06-19
+
+- Проект разделен на `Web-Project/` и `Mobile-App/`: web-сайт, API, Prisma и web-конфиги перенесены в `Web-Project/`, мобильное приложение - в `Mobile-App/`.
+- Обновлены пути в AGENTS, README, спеках, планах, скилах и настройках VS Code; скилы с поврежденной кодировкой переписаны в читаемом виде.
+- Главная web-страница сделана статической: она больше не читает session cookie на `/`, что уменьшает первую загрузку.
+- Завершен план `plans/completed-plans/05-разделение-web-mobile.md`; проверки `npm run lint`, `npm run build`, `npx tsc --noEmit` и `npm run test:api` прошли успешно.
 
 ## 2026-06-16
 

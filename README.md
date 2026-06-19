@@ -19,23 +19,18 @@ HunaSuna не переводит деньги, не хранит деньги и
 | `.agents/` | Быстрый вход в правила для AI-агентов. Главный файл остается `AGENTS.md`. |
 | `.skills/` | Быстрый вход в рабочие скилы. Главные файлы остаются в `skills/`. |
 | `.vscode/` | Настройки VS Code, которые скрывают служебный мусор из Explorer. |
-| `app/` | Next.js страницы, API route handlers, server actions. |
-| `components/` | UI-компоненты web-интерфейса. |
-| `server/` | Серверная логика: auth, services, validators, jobs, logs, db. |
-| `lib/` | Общие технические помощники без бизнес-логики. |
-| `prisma/` | Prisma schema и миграции PostgreSQL. |
-| `mobile/` | Expo React Native приложение. |
-| `scripts/` | Ручные технические скрипты. |
+| `Web-Project/` | Next.js web-сайт, общий backend API, Prisma, web-компоненты, web-скрипты и web-конфиги. |
+| `Mobile-App/` | Expo React Native мобильное приложение. |
 | `specification/` | Постоянные спеки проекта. |
 | `skills/` | Рабочие инструкции по направлениям разработки. |
 | `plans/` | Рабочие планы: текущие в `plans/active-plans/`, выполненные в `plans/completed-plans/`. |
-| `public/` | Статичные файлы web-приложения. |
 
 ## Команды
 
 Web:
 
 ```powershell
+cd Web-Project
 npm run dev
 npm run lint
 npm run build
@@ -45,6 +40,7 @@ npm run test:api
 Prisma:
 
 ```powershell
+cd Web-Project
 npm run prisma:generate
 npm run prisma:migrate
 npm run prisma:studio
@@ -53,7 +49,7 @@ npm run prisma:studio
 Mobile:
 
 ```powershell
-cd mobile
+cd Mobile-App
 npx tsc --noEmit
 npx expo-doctor
 npx expo start
@@ -62,10 +58,16 @@ npx expo start
 App Store:
 
 ```powershell
-cd mobile
+cd Mobile-App
 npx eas-cli@latest build --platform ios --profile production
 npx eas-cli@latest submit --platform ios --profile production
 ```
+
+## Деплой
+
+Для Vercel нужно указать Root Directory: `Web-Project`.
+
+Иначе Vercel будет искать `package.json`, `next.config.ts` и `vercel.json` в корне `SAID`, хотя web-проект теперь находится внутри `Web-Project/`.
 
 ## Важные правила
 
@@ -73,7 +75,7 @@ npx eas-cli@latest submit --platform ios --profile production
 - Не добавлять реальные платежи, балансы, карты, кошельки, комиссии и обмен денег.
 - Каждый пользователь видит только свои данные.
 - API должен отдавать только нужные поля.
-- Бизнес-логика живет в `server/services`, а route handlers в `app/api` остаются тонкими.
+- Бизнес-логика живет в `Web-Project/server/services`, а route handlers в `Web-Project/app/api` остаются тонкими.
 - Мобильное приложение использует общий API и не имеет отдельного backend.
 - Удаленная запись 7 дней видна в разделе `Удаленные`, затем исчезает из web/mobile интерфейса и остается только в техническом архиве базы данных.
 

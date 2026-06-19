@@ -17,9 +17,9 @@ HunaSuna должен оставаться инструментом учета �
 Проект строится на:
 
 - Next.js;
-- Route Handlers в `app/api`;
+- Route Handlers в `Web-Project/app/api`;
 - PostgreSQL;
-- server/service слое для бизнес-логики.
+- `Web-Project/server/services` для бизнес-логики.
 
 Backend нужно строить так, чтобы мобильная версия могла использовать те же API, аккаунты, контакты, записи и правила безопасности.
 
@@ -27,15 +27,16 @@ Backend нужно строить так, чтобы мобильная верс
 
 Рекомендуемая структура:
 
-- `app` - страницы и маршруты Next.js;
-- `app/api` - API endpoints;
-- `components` - интерфейсные компоненты;
-- `server/services` - бизнес-логика;
-- `server/db` - работа с базой данных;
-- `server/auth` - авторизация и доступ;
-- `server/validators` - проверка данных;
-- `server/jobs` - фоновые задачи;
-- `lib` - общие помощники;
+- `Web-Project/app` - страницы и маршруты Next.js;
+- `Web-Project/app/api` - API endpoints;
+- `Web-Project/components` - интерфейсные компоненты;
+- `Web-Project/server/services` - бизнес-логика;
+- `Web-Project/server/db` - работа с базой данных;
+- `Web-Project/server/auth` - авторизация и доступ;
+- `Web-Project/server/validators` - проверка данных;
+- `Web-Project/server/jobs` - фоновые задачи;
+- `Web-Project/lib` - общие помощники;
+- `Mobile-App` - мобильное приложение;
 - `plans/active-plans` - планы проекта в работе;
 - `plans/completed-plans` - уже выполненные планы проекта;
 - `CHANGELOG.md` - журнал заметных изменений проекта.

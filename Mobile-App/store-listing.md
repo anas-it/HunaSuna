@@ -254,7 +254,7 @@ Apple принимает 1-10 скриншотов в `.png`, `.jpg` или `.jp
 
 ## Export Compliance
 
-В `mobile/app.json` уже указано:
+В `Mobile-App/app.json` уже указано:
 
 ```json
 {

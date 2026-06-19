@@ -1,12 +1,8 @@
 import Link from "next/link";
-import { logoutAction } from "@/app/actions";
 import { Logo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
-import { getCurrentUser } from "@/server/auth/session";
 
-export default async function HomePage() {
-  const user = await getCurrentUser();
-
+export default function HomePage() {
   return (
     <main className="relative isolate min-h-screen overflow-hidden bg-[#eef2f1] px-6 py-8 text-[#1f2937]">
       <div aria-hidden="true" className="home-background">
@@ -76,32 +72,14 @@ export default async function HomePage() {
           </p>
         </div>
 
-        {user ? (
-          <div className="flex flex-col gap-4">
-            <p className="text-sm font-medium text-[#256f6c]">
-              Вы уже вошли как {user.login}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild>
-                <Link href="/dashboard">Открыть кабинет</Link>
-              </Button>
-              <form action={logoutAction}>
-                <Button type="submit" variant="secondary">
-                  Выйти
-                </Button>
-              </form>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-3">
-            <Button asChild>
-              <Link href="/login">Войти</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/register">Регистрация</Link>
-            </Button>
-          </div>
-        )}
+        <div className="flex flex-wrap gap-3">
+          <Button asChild>
+            <Link href="/login">Войти</Link>
+          </Button>
+          <Button asChild variant="secondary">
+            <Link href="/register">Регистрация</Link>
+          </Button>
+        </div>
       </section>
     </main>
   );

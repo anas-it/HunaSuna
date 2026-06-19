@@ -13,7 +13,7 @@
 - писать мобильное приложение на React Native, Expo и TypeScript;
 - для запуска через текущий Expo Go на физическом телефоне держать проект на Expo SDK 54;
 - не создавать отдельный backend;
-- использовать общий API из `app/api`;
+- использовать общий API из `../Web-Project/app/api`;
 - хранить session token только через защищенное хранилище;
 - в native-приложении хранить token через Expo SecureStore, а в Expo Web/dev preview использовать только `sessionStorage`;
 - передавать token через `Authorization: Bearer <token>`;

@@ -21,9 +21,9 @@
     "**/*.log": true,
     "**/*.tsbuildinfo": true,
     "**/next-env.d.ts": true,
-    "**/mobile/.claude": true,
-    "**/mobile/.expo": true,
-    "**/mobile/node_modules": true
+    "**/Mobile-App/.claude": true,
+    "**/Mobile-App/.expo": true,
+    "**/Mobile-App/node_modules": true
   },
   "search.exclude": {
     "**/.codex-logs": true,
@@ -35,8 +35,8 @@
     "**/build": true,
     "**/node_modules": true,
     "**/*.log": true,
-    "**/mobile/.expo": true,
-    "**/mobile/node_modules": true
+    "**/Mobile-App/.expo": true,
+    "**/Mobile-App/node_modules": true
   },
   "files.watcherExclude": {
     "**/.codex-logs/**": true,
@@ -47,7 +47,7 @@
     "**/dist/**": true,
     "**/build/**": true,
     "**/node_modules/**": true,
-    "**/mobile/.expo/**": true,
-    "**/mobile/node_modules/**": true
+    "**/Mobile-App/.expo/**": true,
+    "**/Mobile-App/node_modules/**": true
   }
 }
