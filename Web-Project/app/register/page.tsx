@@ -74,7 +74,7 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
 
         <div className="mt-5">
           <Button asChild variant="secondary">
-            <Link href="/login">Уже есть аккаунт</Link>
+            <Link href="/login" prefetch={false}>Уже есть аккаунт</Link>
           </Button>
         </div>
       </section>

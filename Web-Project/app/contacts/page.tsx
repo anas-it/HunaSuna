@@ -118,6 +118,7 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
                     <Link
                       className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d8dee8] bg-white px-3 text-sm font-medium text-[#256f6c] transition-colors hover:bg-[#eef2f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#256f6c]"
                       href={`/contacts/${contact.id}`}
+                      prefetch={false}
                     >
                       <Pencil className="h-4 w-4" />
                       Редактировать

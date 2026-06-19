@@ -44,7 +44,7 @@ export function PaginationNav({ basePath, pagination, params }: PaginationNavPro
       <div className="flex gap-2">
         {pagination.hasPreviousPage ? (
           <Button asChild variant="secondary">
-            <Link href={pageHref(basePath, params, pagination.page - 1)}>Назад</Link>
+            <Link href={pageHref(basePath, params, pagination.page - 1)} prefetch={false}>Назад</Link>
           </Button>
         ) : (
           <Button disabled variant="secondary">
@@ -53,7 +53,7 @@ export function PaginationNav({ basePath, pagination, params }: PaginationNavPro
         )}
         {pagination.hasNextPage ? (
           <Button asChild variant="secondary">
-            <Link href={pageHref(basePath, params, pagination.page + 1)}>Вперед</Link>
+            <Link href={pageHref(basePath, params, pagination.page + 1)} prefetch={false}>Вперед</Link>
           </Button>
         ) : (
           <Button disabled variant="secondary">

@@ -39,7 +39,7 @@ export default async function RecordsPage({ searchParams }: RecordsPageProps) {
 
       <div className="mb-5 flex justify-end">
         <Button asChild>
-          <Link href="/records/new">Создать запись</Link>
+          <Link href="/records/new" prefetch={false}>Создать запись</Link>
         </Button>
       </div>
 

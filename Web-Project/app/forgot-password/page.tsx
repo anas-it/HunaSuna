@@ -89,7 +89,7 @@ export default async function ForgotPasswordPage({
 
         <div className="mt-5">
           <Button asChild variant="secondary">
-            <Link href="/login">Вернуться ко входу</Link>
+            <Link href="/login" prefetch={false}>Вернуться ко входу</Link>
           </Button>
         </div>
       </section>

@@ -18,7 +18,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <main className="flex min-h-screen items-center justify-center bg-[#f7f8fa] px-6">
       <section className="w-full max-w-md rounded-lg border border-[#d8dee8] bg-white p-6 shadow-sm">
         <Button asChild className="-ml-3 mb-4 h-9 px-3 text-[#475569]" variant="ghost">
-          <Link href="/">
+          <Link href="/" prefetch={false}>
             <Home className="mr-2 h-4 w-4" />
             На главную
           </Link>
@@ -59,10 +59,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
         <div className="mt-5 flex gap-3">
           <Button asChild variant="secondary">
-            <Link href="/forgot-password">Забыли пароль?</Link>
+            <Link href="/forgot-password" prefetch={false}>Забыли пароль?</Link>
           </Button>
           <Button asChild variant="secondary">
-            <Link href="/register">Регистрация</Link>
+            <Link href="/register" prefetch={false}>Регистрация</Link>
           </Button>
         </div>
       </section>

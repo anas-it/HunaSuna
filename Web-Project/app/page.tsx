@@ -74,10 +74,10 @@ export default function HomePage() {
 
         <div className="flex flex-wrap gap-3">
           <Button asChild>
-            <Link href="/login">Войти</Link>
+            <Link href="/login" prefetch={false}>Войти</Link>
           </Button>
           <Button asChild variant="secondary">
-            <Link href="/register">Регистрация</Link>
+            <Link href="/register" prefetch={false}>Регистрация</Link>
           </Button>
         </div>
       </section>

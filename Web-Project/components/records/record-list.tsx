@@ -254,6 +254,7 @@ export function RecordList({ records, showEditAction = true }: RecordListProps) 
                     <Link
                       className="inline-flex h-9 items-center justify-center rounded-md border border-[#d8dee8] bg-white px-3 text-sm font-medium text-[#256f6c] transition-colors hover:bg-[#eef2f6]"
                       href={`/records/${record.id}?returnTo=${encodeURIComponent(returnTo)}`}
+                      prefetch={false}
                     >
                       Редактировать
                     </Link>
