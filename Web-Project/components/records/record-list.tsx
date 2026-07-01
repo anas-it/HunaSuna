@@ -66,13 +66,16 @@ function sortValue(record: RecordItem, key: SortKey) {
   }
 
   if (key === "sender") {
-    return formatPerson(record.senderFirstNameSnapshot, record.senderLastNameSnapshot).toLowerCase();
+    return formatPerson(
+      record.senderFirstNameSnapshot,
+      record.senderLastNameSnapshot,
+    ).toLowerCase();
   }
 
   if (key === "receiver") {
     return formatPerson(
       record.receiverFirstNameSnapshot,
-      record.receiverLastNameSnapshot
+      record.receiverLastNameSnapshot,
     ).toLowerCase();
   }
 
@@ -85,7 +88,11 @@ function sortValue(record: RecordItem, key: SortKey) {
 
 function SortButton({ label, sortKey, sortState, onSort }: SortButtonProps) {
   const isActive = sortState?.key === sortKey;
-  const Icon = !isActive ? ArrowUpDown : sortState.direction === "asc" ? ArrowUp : ArrowDown;
+  const Icon = !isActive
+    ? ArrowUpDown
+    : sortState.direction === "asc"
+      ? ArrowUp
+      : ArrowDown;
 
   return (
     <button
@@ -102,7 +109,7 @@ function SortButton({ label, sortKey, sortState, onSort }: SortButtonProps) {
 function RecordCell({ children, className, record, onOpen }: RecordCellProps) {
   return (
     <button
-      className="min-w-0 cursor-pointer rounded-md px-3 py-4 text-left transition-colors hover:bg-[#f8fafc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#256f6c]"
+      className="min-w-0 cursor-pointer px-3 py-2.5 text-left transition-colors hover:bg-[#f8fafc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#256f6c]"
       type="button"
       onClick={() => onOpen(record)}
     >
@@ -111,15 +118,18 @@ function RecordCell({ children, className, record, onOpen }: RecordCellProps) {
   );
 }
 
-export function RecordList({ records, showEditAction = true }: RecordListProps) {
+export function RecordList({
+  records,
+  showEditAction = true,
+}: RecordListProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [selectedRecord, setSelectedRecord] = useState<RecordItem | null>(null);
   const [sortState, setSortState] = useState<SortState>(null);
   const columnsClass = showEditAction
-    ? "grid-cols-[180px_1fr_1fr_140px_120px_150px]"
-    : "grid-cols-[180px_1fr_1fr_140px_120px]";
-  const widthClass = showEditAction ? "min-w-[900px]" : "min-w-[760px]";
+    ? "grid-cols-[166px_minmax(150px,1.15fr)_minmax(170px,1.15fr)_130px_86px_132px]"
+    : "grid-cols-[166px_minmax(150px,1.15fr)_minmax(170px,1.15fr)_130px_86px]";
+  const widthClass = showEditAction ? "min-w-[834px]" : "min-w-[702px]";
   const sortedRecords = useMemo(() => {
     if (!sortState) {
       return records;
@@ -161,13 +171,13 @@ export function RecordList({ records, showEditAction = true }: RecordListProps) 
       if (current?.key === key) {
         return {
           key,
-          direction: current.direction === "asc" ? "desc" : "asc"
+          direction: current.direction === "asc" ? "desc" : "asc",
         };
       }
 
       return {
         key,
-        direction: key === "date" ? "desc" : "asc"
+        direction: key === "date" ? "desc" : "asc",
       };
     });
   }
@@ -182,87 +192,168 @@ export function RecordList({ records, showEditAction = true }: RecordListProps) 
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <div className={widthClass}>
-          <div className={`grid ${columnsClass} rounded-md border border-[#d8dee8] bg-[#f1f5f9] px-1 text-sm text-[#475569]`}>
-            <div className="px-3 py-3">
-              <SortButton label="Дата" sortKey="date" sortState={sortState} onSort={toggleSort} />
-            </div>
-            <div className="px-3 py-3">
-              <SortButton
-                label="От кого"
-                sortKey="sender"
-                sortState={sortState}
-                onSort={toggleSort}
-              />
-            </div>
-            <div className="px-3 py-3">
-              <SortButton
-                label="Кому"
-                sortKey="receiver"
-                sortState={sortState}
-                onSort={toggleSort}
-              />
-            </div>
-            <div className="px-3 py-3">
-              <SortButton
-                label="Сумма"
-                sortKey="amount"
-                sortState={sortState}
-                onSort={toggleSort}
-              />
-            </div>
-            <div className="px-3 py-3">
-              <SortButton label="Курс" sortKey="rate" sortState={sortState} onSort={toggleSort} />
-            </div>
-            {showEditAction ? (
-              <div className="px-3 py-3 font-semibold">Действие</div>
-            ) : null}
-          </div>
-
-          <div className="mt-3 grid gap-3">
-            {sortedRecords.map((record) => (
-              <div
-                className={`grid ${columnsClass} items-center overflow-hidden rounded-md border border-[#d8dee8] bg-white text-sm shadow-sm transition-colors hover:border-[#cbd5e1] hover:bg-[#fbfcfe]`}
-                key={record.id}
-              >
-                <RecordCell onOpen={openRecord} record={record}>
-                  {recordDate(record)}
-                </RecordCell>
-                <RecordCell
-                  className="text-[15px] font-medium"
-                  onOpen={openRecord}
-                  record={record}
-                >
-                  {formatPerson(record.senderFirstNameSnapshot, record.senderLastNameSnapshot)}
-                </RecordCell>
-                <RecordCell
-                  className="text-[15px] font-medium"
-                  onOpen={openRecord}
-                  record={record}
-                >
-                  {formatPerson(record.receiverFirstNameSnapshot, record.receiverLastNameSnapshot)}
-                </RecordCell>
-                <RecordCell onOpen={openRecord} record={record}>
-                  {record.amount} {record.currency}
-                </RecordCell>
-                <RecordCell onOpen={openRecord} record={record}>
-                  {record.rate}
-                </RecordCell>
-                {showEditAction ? (
-                  <div className="border-l border-[#e5eaf1] px-3 py-4">
-                    <Link
-                      className="inline-flex h-9 items-center justify-center rounded-md border border-[#d8dee8] bg-white px-3 text-sm font-medium text-[#256f6c] transition-colors hover:bg-[#eef2f6]"
-                      href={`/records/${record.id}?returnTo=${encodeURIComponent(returnTo)}`}
-                      prefetch={false}
-                    >
-                      Редактировать
-                    </Link>
-                  </div>
-                ) : null}
+      <div className="overflow-hidden rounded-lg border border-[#d8dee8] bg-white shadow-sm">
+        <div className="hidden overflow-x-auto md:block">
+          <div className={widthClass}>
+            <div
+              className={`grid ${columnsClass} border-b border-[#d8dee8] bg-[#f8fafc] text-xs text-[#475569]`}
+            >
+              <div className="px-3 py-2.5">
+                <SortButton
+                  label="Дата"
+                  sortKey="date"
+                  sortState={sortState}
+                  onSort={toggleSort}
+                />
               </div>
-            ))}
+              <div className="px-3 py-2.5">
+                <SortButton
+                  label="От кого"
+                  sortKey="sender"
+                  sortState={sortState}
+                  onSort={toggleSort}
+                />
+              </div>
+              <div className="px-3 py-2.5">
+                <SortButton
+                  label="Кому"
+                  sortKey="receiver"
+                  sortState={sortState}
+                  onSort={toggleSort}
+                />
+              </div>
+              <div className="px-3 py-2.5">
+                <SortButton
+                  label="Сумма"
+                  sortKey="amount"
+                  sortState={sortState}
+                  onSort={toggleSort}
+                />
+              </div>
+              <div className="px-3 py-2.5">
+                <SortButton
+                  label="Курс"
+                  sortKey="rate"
+                  sortState={sortState}
+                  onSort={toggleSort}
+                />
+              </div>
+              {showEditAction ? (
+                <div className="px-3 py-2.5 font-semibold">Действие</div>
+              ) : null}
+            </div>
+
+            <div className="divide-y divide-[#e5eaf1]">
+              {sortedRecords.map((record) => (
+                <div
+                  className={`grid ${columnsClass} min-h-12 items-center text-sm transition-colors hover:bg-[#fbfcfe]`}
+                  key={record.id}
+                >
+                  <RecordCell
+                    className="text-[#334155]"
+                    onOpen={openRecord}
+                    record={record}
+                  >
+                    {recordDate(record)}
+                  </RecordCell>
+                  <RecordCell
+                    className="text-[15px] font-medium"
+                    onOpen={openRecord}
+                    record={record}
+                  >
+                    {formatPerson(
+                      record.senderFirstNameSnapshot,
+                      record.senderLastNameSnapshot,
+                    )}
+                  </RecordCell>
+                  <RecordCell
+                    className="text-[15px] font-medium"
+                    onOpen={openRecord}
+                    record={record}
+                  >
+                    {formatPerson(
+                      record.receiverFirstNameSnapshot,
+                      record.receiverLastNameSnapshot,
+                    )}
+                  </RecordCell>
+                  <RecordCell onOpen={openRecord} record={record}>
+                    {record.amount} {record.currency}
+                  </RecordCell>
+                  <RecordCell onOpen={openRecord} record={record}>
+                    {record.rate}
+                  </RecordCell>
+                  {showEditAction ? (
+                    <div className="border-l border-[#e5eaf1] px-3 py-2">
+                      <Link
+                        className="inline-flex h-8 w-full items-center justify-center rounded-md border border-[#d8dee8] bg-white px-2 text-xs font-semibold text-[#256f6c] transition-colors hover:bg-[#eef2f6]"
+                        href={`/records/${record.id}?returnTo=${encodeURIComponent(returnTo)}`}
+                        prefetch={false}
+                      >
+                        Редактировать
+                      </Link>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
           </div>
+        </div>
+
+        <div className="grid divide-y divide-[#e5eaf1] md:hidden">
+          {sortedRecords.map((record) => (
+            <div className="bg-white p-3" key={record.id}>
+              <button
+                className="w-full cursor-pointer rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#256f6c]"
+                type="button"
+                onClick={() => openRecord(record)}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-xs text-[#64748b]">
+                      {recordDate(record)}
+                    </p>
+                    <p className="mt-1 truncate text-sm font-semibold text-[#1f2937]">
+                      {formatPerson(
+                        record.senderFirstNameSnapshot,
+                        record.senderLastNameSnapshot,
+                      )}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-right text-sm font-semibold text-[#256f6c]">
+                    {record.amount} {record.currency}
+                  </p>
+                </div>
+
+                <div className="mt-2 grid gap-1.5 text-sm">
+                  <p className="min-w-0 truncate text-[#1f2937]">
+                    <span className="text-[#64748b]">Кому: </span>
+                    {formatPerson(
+                      record.receiverFirstNameSnapshot,
+                      record.receiverLastNameSnapshot,
+                    )}
+                  </p>
+                  <p className="text-[#64748b]">
+                    Курс:{" "}
+                    <span className="font-medium text-[#1f2937]">
+                      {record.rate}
+                    </span>
+                  </p>
+                </div>
+              </button>
+
+              {showEditAction ? (
+                <div className="mt-3 flex justify-end">
+                  <Link
+                    className="inline-flex h-8 items-center justify-center rounded-md border border-[#d8dee8] bg-white px-3 text-xs font-semibold text-[#256f6c] transition-colors hover:bg-[#eef2f6]"
+                    href={`/records/${record.id}?returnTo=${encodeURIComponent(returnTo)}`}
+                    prefetch={false}
+                  >
+                    Редактировать
+                  </Link>
+                </div>
+              ) : null}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -279,8 +370,12 @@ export function RecordList({ records, showEditAction = true }: RecordListProps) 
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h3 className="text-lg font-semibold text-[#1f2937]">Информация о записи</h3>
-                <p className="mt-1 text-sm text-[#64748b]">{recordDate(selectedRecord)}</p>
+                <h3 className="text-lg font-semibold text-[#1f2937]">
+                  Информация о записи
+                </h3>
+                <p className="mt-1 text-sm text-[#64748b]">
+                  {recordDate(selectedRecord)}
+                </p>
               </div>
               <button
                 aria-label="Закрыть"
@@ -294,11 +389,13 @@ export function RecordList({ records, showEditAction = true }: RecordListProps) 
 
             <div className="mt-5 grid gap-3 text-[15px]">
               <div className="rounded-md border border-[#e5eaf1] p-3">
-                <p className="text-xs font-semibold uppercase text-[#64748b]">От кого</p>
+                <p className="text-xs font-semibold uppercase text-[#64748b]">
+                  От кого
+                </p>
                 <p className="mt-1 font-semibold text-[#1f2937]">
                   {formatPerson(
                     selectedRecord.senderFirstNameSnapshot,
-                    selectedRecord.senderLastNameSnapshot
+                    selectedRecord.senderLastNameSnapshot,
                   )}
                 </p>
                 <p className="mt-1 text-sm text-[#64748b]">
@@ -307,11 +404,13 @@ export function RecordList({ records, showEditAction = true }: RecordListProps) 
               </div>
 
               <div className="rounded-md border border-[#e5eaf1] p-3">
-                <p className="text-xs font-semibold uppercase text-[#64748b]">Кому</p>
+                <p className="text-xs font-semibold uppercase text-[#64748b]">
+                  Кому
+                </p>
                 <p className="mt-1 font-semibold text-[#1f2937]">
                   {formatPerson(
                     selectedRecord.receiverFirstNameSnapshot,
-                    selectedRecord.receiverLastNameSnapshot
+                    selectedRecord.receiverLastNameSnapshot,
                   )}
                 </p>
                 <p className="mt-1 text-sm text-[#64748b]">
@@ -321,14 +420,20 @@ export function RecordList({ records, showEditAction = true }: RecordListProps) 
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-md border border-[#e5eaf1] p-3">
-                  <p className="text-xs font-semibold uppercase text-[#64748b]">Сумма</p>
+                  <p className="text-xs font-semibold uppercase text-[#64748b]">
+                    Сумма
+                  </p>
                   <p className="mt-1 font-medium text-[#1f2937]">
                     {selectedRecord.amount} {selectedRecord.currency}
                   </p>
                 </div>
                 <div className="rounded-md border border-[#e5eaf1] p-3">
-                  <p className="text-xs font-semibold uppercase text-[#64748b]">Курс</p>
-                  <p className="mt-1 font-medium text-[#1f2937]">{selectedRecord.rate}</p>
+                  <p className="text-xs font-semibold uppercase text-[#64748b]">
+                    Курс
+                  </p>
+                  <p className="mt-1 font-medium text-[#1f2937]">
+                    {selectedRecord.rate}
+                  </p>
                 </div>
               </div>
             </div>

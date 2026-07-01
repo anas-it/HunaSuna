@@ -45,7 +45,6 @@ export function AppNavigation({ logoutAction }: AppNavigationProps) {
         <Link
           className="mb-8 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#256f6c]"
           href="/dashboard"
-          prefetch={false}
         >
           <Logo />
         </Link>
@@ -63,7 +62,6 @@ export function AppNavigation({ logoutAction }: AppNavigationProps) {
                 )}
                 href={item.href}
                 key={item.href}
-                prefetch={false}
               >
                 <Icon className="h-4 w-4" />
                 {item.label}
@@ -85,7 +83,6 @@ export function AppNavigation({ logoutAction }: AppNavigationProps) {
                 )}
                 href={item.href}
                 key={item.href}
-                prefetch={false}
               >
                 <Icon className="h-4 w-4" />
                 {item.label}
@@ -105,7 +102,6 @@ export function AppNavigation({ logoutAction }: AppNavigationProps) {
         <Link
           className="inline-flex rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#256f6c]"
           href="/dashboard"
-          prefetch={false}
         >
           <Logo />
         </Link>
@@ -148,7 +144,6 @@ export function AppNavigation({ logoutAction }: AppNavigationProps) {
                     href={item.href}
                     key={item.href}
                     onClick={() => setIsMoreOpen(false)}
-                    prefetch={false}
                   >
                     <Icon className="h-4 w-4" />
                     {item.label}
@@ -180,7 +175,6 @@ export function AppNavigation({ logoutAction }: AppNavigationProps) {
               href={item.href}
               key={item.href}
               onClick={() => setIsMoreOpen(false)}
-              prefetch={false}
             >
               <Icon className="h-5 w-5" />
               <span className="leading-none">{item.label}</span>

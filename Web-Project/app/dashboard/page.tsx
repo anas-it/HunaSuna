@@ -14,10 +14,10 @@ export default async function DashboardPage() {
     <PageShell title="Главная">
       <div className="mb-6 flex flex-wrap justify-end gap-3">
         <Button asChild variant="secondary">
-          <Link href="/contacts" prefetch={false}>Контакты</Link>
+          <Link href="/contacts">Контакты</Link>
         </Button>
         <Button asChild>
-          <Link href="/records/new" prefetch={false}>Создать запись</Link>
+          <Link href="/records/new">Создать запись</Link>
         </Button>
       </div>
 
@@ -52,7 +52,7 @@ export default async function DashboardPage() {
 
       <div className="mb-3 flex items-center justify-between gap-3">
         <h2 className="text-xl font-semibold">Последние записи</h2>
-        <Link className="text-sm font-medium text-[#256f6c]" href="/records" prefetch={false}>
+        <Link className="text-sm font-medium text-[#256f6c]" href="/records">
           Все записи
         </Link>
       </div>

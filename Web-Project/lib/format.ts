@@ -1,8 +1,15 @@
+function padDatePart(value: number) {
+  return String(value).padStart(2, "0");
+}
+
 export function formatDateTime(date: Date) {
-  return new Intl.DateTimeFormat("ru-RU", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(date);
+  const day = padDatePart(date.getDate());
+  const month = padDatePart(date.getMonth() + 1);
+  const year = date.getFullYear();
+  const hours = padDatePart(date.getHours());
+  const minutes = padDatePart(date.getMinutes());
+
+  return `${day}/${month}/${year}, ${hours}:${minutes}`;
 }
 
 export function formatPerson(firstName?: string | null, lastName?: string | null) {
