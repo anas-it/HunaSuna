@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { Clock, FileText, Home, Settings, Users } from "lucide-react";
+import { HomeAuthModal } from "@/components/auth/home-auth-modal";
 import { Logo } from "@/components/layout/logo";
-import { Button } from "@/components/ui/button";
 
 const homeBenefits = [
   {
@@ -31,9 +30,21 @@ const homeBenefits = [
   }
 ];
 
-export default function HomePage() {
+type HomePageProps = {
+  searchParams: Promise<{
+    auth?: string;
+    error?: string;
+    message?: string;
+  }>;
+};
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
+  const authMode =
+    params.auth === "login" || params.auth === "register" ? params.auth : null;
+
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#f4f6f5] px-6 py-8 text-[#1f2937]">
+    <main className="home-page relative isolate min-h-screen overflow-hidden bg-[#f4f6f5] px-6 py-8 text-[#1f2937]">
       <div aria-hidden="true" className="home-background">
         <div className="home-paper-field" />
 
@@ -61,15 +72,15 @@ export default function HomePage() {
         </div>
       </div>
 
-      <section className="relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl flex-col justify-center gap-8">
-        <div className="max-w-4xl">
+      <section className="home-hero relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl flex-col justify-center gap-8">
+        <div className="home-intro max-w-4xl">
           <Logo className="home-logo-3d mb-5" />
-          <h1 className="text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
+          <h1 className="home-title text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
             <span className="block">
               Рабочий журнал для учёта и хранения информации о переводах
             </span>
-            <span className="mt-3 block text-[#256f6c]">
-              История без хаоса!
+            <span className="home-tagline mt-3 block text-[#256f6c]">
+              История без хаоса
             </span>
           </h1>
         </div>
@@ -99,14 +110,12 @@ export default function HomePage() {
           })}
         </div>
 
-        <div className="flex flex-wrap gap-3">
-          <Button asChild>
-            <Link href="/login">Войти</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/register">Регистрация</Link>
-          </Button>
-        </div>
+        <HomeAuthModal
+          error={params.error}
+          initialMode={authMode}
+          key={`${authMode ?? "home"}-${params.error ?? ""}-${params.message ?? ""}`}
+          message={params.message}
+        />
       </section>
     </main>
   );

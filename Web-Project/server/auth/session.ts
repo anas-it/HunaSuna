@@ -121,7 +121,7 @@ export async function requirePageUser() {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect(`/login?error=${encodeURIComponent("Войдите в аккаунт")}`);
+    redirect(`/?auth=login&error=${encodeURIComponent("Войдите в аккаунт")}`);
   }
 
   return user;
@@ -131,7 +131,7 @@ export async function requirePageSessionUser() {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect(`/login?error=${encodeURIComponent("Войдите в аккаунт")}`);
+    redirect(`/?auth=login&error=${encodeURIComponent("Войдите в аккаунт")}`);
   }
 
   return user;

@@ -10,7 +10,7 @@ type LogoProps = {
 
 export function Logo({ className, markClassName, textClassName }: LogoProps) {
   return (
-    <span className={cn("logo-brand inline-flex items-center gap-2.5", className)}>
+    <span className={cn("logo-brand inline-flex items-center gap-2", className)}>
       <span
         aria-hidden="true"
         className={cn(
@@ -33,16 +33,10 @@ export function Logo({ className, markClassName, textClassName }: LogoProps) {
           "logo-brand-text",
           textClassName
         )}
+        aria-label="HunaSuna"
       >
-        <Image
-          src="/brand/hunasuna-wordmark.png"
-          alt="HunaSuna"
-          width={588}
-          height={98}
-          priority
-          sizes="(max-width: 860px) 150px, 180px"
-          className="logo-brand-wordmark-image"
-        />
+        <span aria-hidden="true">Huna</span>
+        <span aria-hidden="true" className="logo-brand-text-accent">Suna</span>
       </span>
     </span>
   );

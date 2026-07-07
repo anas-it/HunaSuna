@@ -209,7 +209,7 @@ export async function registerAction(formData: FormData) {
 
     await createSession(result.user.id, meta);
   } catch (error) {
-    nextPath = withError("/register", error);
+    nextPath = withError("/?auth=register", error);
   }
 
   redirect(nextPath);
@@ -232,7 +232,7 @@ export async function loginAction(formData: FormData) {
       remember: checked(formData, "remember")
     });
   } catch (error) {
-    nextPath = withError("/login", error);
+    nextPath = withError("/?auth=login", error);
   }
 
   redirect(nextPath);
@@ -240,7 +240,7 @@ export async function loginAction(formData: FormData) {
 
 export async function logoutAction() {
   await destroyCurrentSession();
-  redirect("/login");
+  redirect("/");
 }
 
 export async function requestPasswordRecoveryAction(formData: FormData) {
@@ -258,7 +258,10 @@ export async function requestPasswordRecoveryAction(formData: FormData) {
 }
 
 export async function resetPasswordAction(formData: FormData) {
-  let nextPath = "/login";
+  let nextPath = withMessage(
+    "/?auth=login",
+    "Пароль изменен. Войдите с новым паролем"
+  );
 
   try {
     const meta = await getRequestMeta();
@@ -497,7 +500,7 @@ export async function revealSensitiveSettingsAction(formData: FormData) {
 }
 
 export async function deleteAccountAction(formData: FormData) {
-  let nextPath = "/login";
+  let nextPath = "/";
 
   try {
     const user = await requirePageUser();
@@ -511,7 +514,7 @@ export async function deleteAccountAction(formData: FormData) {
       meta
     );
     await destroyCurrentSession();
-    nextPath = withMessage("/login", "Аккаунт удален");
+    nextPath = withMessage("/", "Аккаунт удален");
   } catch (error) {
     nextPath = withError("/settings", error);
   }
