@@ -28,7 +28,7 @@ const homeBenefits = [
     title: "Быстрый поиск"
   },
   {
-    description: "автосохранение дата и времени",
+    description: "автосохранение даты и времени",
     icon: Clock,
     title: "История"
   },
