@@ -75,12 +75,12 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
         </SingleSubmitForm>
 
         <section>
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-md border border-[#d8dee8] bg-[#f1f5f9] px-4 py-3">
+          <div className="contacts-list-bar mb-4 flex items-center justify-between gap-3 rounded-md border border-[#d8dee8] bg-[#f1f5f9] px-4 py-3">
             <div className="flex items-center gap-2 text-sm font-semibold text-[#475569]">
               <Users className="h-4 w-4" />
               Список контактов
             </div>
-            <span className="rounded-md border border-[#d8dee8] bg-white px-2.5 py-1 text-xs font-medium text-[#64748b]">
+            <span className="contacts-list-count rounded-md border border-[#d8dee8] bg-white px-2.5 py-1 text-xs font-medium text-[#64748b]">
               {pagination.total}
             </span>
           </div>
@@ -93,7 +93,7 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
             <div className="grid gap-2">
               {contacts.map((contact) => (
                 <article
-                  className="rounded-md border border-[#d8dee8] bg-white p-3 shadow-sm transition-colors hover:border-[#cbd5e1] hover:bg-[#fbfcfe]"
+                  className="contact-list-card rounded-md border border-[#d8dee8] bg-white p-3 shadow-sm transition-colors hover:border-[#cbd5e1] hover:bg-[#fbfcfe]"
                   key={contact.id}
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -116,7 +116,7 @@ export default async function ContactsPage({ searchParams }: ContactsPageProps) 
                       </div>
                     </div>
                     <Link
-                      className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d8dee8] bg-white px-3 text-sm font-medium text-[#256f6c] transition-colors hover:bg-[#eef2f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#256f6c]"
+                      className="contact-list-edit inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-md border border-[#d8dee8] bg-white px-3 text-sm font-medium text-[#256f6c] transition-colors hover:bg-[#eef2f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#256f6c]"
                       href={`/contacts/${contact.id}`}
                       prefetch={false}
                     >

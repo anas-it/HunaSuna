@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import {
   deleteAccountAction,
   revealSensitiveSettingsAction,
@@ -8,6 +9,7 @@ import {
 import { Notice } from "@/components/layout/notice";
 import { PageShell } from "@/components/layout/page-shell";
 import { SettingsPanel } from "@/components/settings/settings-panel";
+import { THEME_COOKIE, themeFromCookie } from "@/lib/theme";
 import { requirePageUser } from "@/server/auth/session";
 import { getUserProfile } from "@/server/services/user.service";
 
@@ -18,6 +20,8 @@ type SettingsPageProps = {
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const currentUser = await requirePageUser();
   const params = await searchParams;
+  const cookieStore = await cookies();
+  const theme = themeFromCookie(cookieStore.get(THEME_COOKIE)?.value);
   const user = await getUserProfile(currentUser.id);
 
   if (!user) {
@@ -30,6 +34,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       <SettingsPanel
         deleteAccountAction={deleteAccountAction}
         hasEmail={Boolean(user.email)}
+        initialTheme={theme}
         revealSensitiveDataAction={revealSensitiveSettingsAction}
         updateEmailAction={updateEmailAction}
         updatePasswordAction={updatePasswordAction}

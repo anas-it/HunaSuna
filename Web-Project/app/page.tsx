@@ -1,32 +1,41 @@
-import { Clock, FileText, Home, Settings, Users } from "lucide-react";
+import {
+  Clock,
+  FileText,
+  Search,
+  ShieldCheck,
+  Users
+} from "lucide-react";
+import { cookies } from "next/headers";
 import { HomeAuthModal } from "@/components/auth/home-auth-modal";
 import { Logo } from "@/components/layout/logo";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { THEME_COOKIE, themeFromCookie } from "@/lib/theme";
 
 const homeBenefits = [
   {
-    description: "быстро, спокойно, без лишних экранов",
+    description: "сумма, курс и время в одном месте",
     icon: FileText,
-    title: "Удобный интерфейс"
+    title: "Записи"
   },
   {
-    description: "главные данные видны сразу после входа",
-    icon: Home,
-    title: "Легкий дашборд"
-  },
-  {
-    description: "имена, телефоны и история под рукой",
+    description: "имена и телефоны всегда рядом",
     icon: Users,
     title: "Контакты"
   },
   {
-    description: "дата, время и курс сохраняются в записи",
-    icon: Clock,
-    title: "Курсы и время"
+    description: "по контакту или номеру телефона",
+    icon: Search,
+    title: "Быстрый поиск"
   },
   {
-    description: "учет в нужной валюте без лишних настроек",
-    icon: Settings,
-    title: "Разные валюты"
+    description: "дата и время сохраняются автоматически",
+    icon: Clock,
+    title: "История"
+  },
+  {
+    description: "удаленные записи можно вернуть 7 дней",
+    icon: ShieldCheck,
+    title: "Спокойствие"
   }
 ];
 
@@ -40,6 +49,8 @@ type HomePageProps = {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const params = await searchParams;
+  const cookieStore = await cookies();
+  const theme = themeFromCookie(cookieStore.get(THEME_COOKIE)?.value);
   const authMode =
     params.auth === "login" || params.auth === "register" ? params.auth : null;
 
@@ -47,6 +58,25 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     <main className="home-page relative isolate min-h-screen overflow-hidden bg-[#f4f6f5] px-6 py-8 text-[#1f2937]">
       <div aria-hidden="true" className="home-background">
         <div className="home-paper-field" />
+        <svg
+          className="home-ambient-lines"
+          preserveAspectRatio="none"
+          viewBox="0 0 1440 900"
+        >
+          <path
+            className="home-ambient-path home-ambient-path-one"
+            d="M-120 188C142 78 308 206 522 154C777 92 926 66 1138 146C1266 194 1380 174 1560 102"
+          />
+          <path
+            className="home-ambient-path home-ambient-path-two"
+            d="M-100 494C116 424 276 506 474 450C656 398 824 328 1034 396C1212 454 1348 432 1540 360"
+          />
+          <path
+            className="home-ambient-path home-ambient-path-three"
+            d="M-140 718C88 662 260 722 462 680C702 630 850 568 1084 626C1262 670 1398 640 1560 586"
+          />
+        </svg>
+        <div className="home-ambient-sheets" />
 
         <div className="home-left-motion">
           <span className="home-left-line home-left-line-one" />
@@ -72,51 +102,91 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
       </div>
 
-      <section className="home-hero relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-5xl flex-col justify-center gap-8">
-        <div className="home-intro max-w-4xl">
-          <Logo className="home-logo-3d mb-5" />
-          <h1 className="home-title text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
-            <span className="block">
-              Рабочий журнал для учёта и хранения информации о переводах
-            </span>
-            <span className="home-tagline mt-3 block text-[#256f6c]">
-              История без хаоса
-            </span>
-          </h1>
-        </div>
+      <div className="home-shell relative z-10 mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl flex-col">
+        <header className="home-topbar">
+          <Logo className="home-corner-logo" />
+          <div className="home-topbar-actions">
+            <ThemeToggle compact initialTheme={theme} />
+            <HomeAuthModal
+              error={params.error}
+              initialMode={authMode}
+              key={`${authMode ?? "home"}-${params.error ?? ""}-${params.message ?? ""}`}
+              message={params.message}
+            />
+          </div>
+        </header>
 
-        <div className="home-benefits" aria-label="Почему удобно пользоваться HunaSuna">
-          {homeBenefits.map((benefit) => {
-            const Icon = benefit.icon;
+        <section className="home-hero">
+          <div className="home-intro">
+            <h1 className="home-title">
+              Учет информации о переводах
+            </h1>
+            <p className="home-lead">
+              HunaSuna помогает хранить записи, контакты и историю в одном
+              спокойном рабочем журнале.
+            </p>
 
-            return (
-              <div
-                className="home-benefit-item"
-                key={benefit.title}
-              >
-                <span className="home-benefit-icon">
-                  <Icon className="h-4 w-4" />
+            <div className="home-benefits" aria-label="Возможности HunaSuna">
+              {homeBenefits.map((benefit) => {
+                const Icon = benefit.icon;
+
+                return (
+                  <div className="home-benefit-item" key={benefit.title}>
+                    <span className="home-benefit-icon">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="home-benefit-copy">
+                      <strong>{benefit.title}</strong>
+                      <span>{benefit.description}</span>
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <aside className="home-preview" aria-label="Пример рабочего журнала">
+            <div className="home-preview-top">
+              <span>Рабочий журнал</span>
+              <strong>Сегодня</strong>
+            </div>
+
+            <div className="home-preview-search">
+              <Search className="h-4 w-4" />
+              <span>Поиск по контакту или телефону</span>
+            </div>
+
+            <div className="home-preview-list">
+              <div className="home-preview-row">
+                <span className="home-preview-avatar">АМ</span>
+                <span>
+                  <strong>Абдул М.</strong>
+                  <small>Запись сохранена в 12:40</small>
                 </span>
-                <span className="home-benefit-copy">
-                  <strong>
-                    {benefit.title}
-                  </strong>
-                  <span>
-                    {benefit.description}
-                  </span>
-                </span>
+                <em>курс указан</em>
               </div>
-            );
-          })}
-        </div>
 
-        <HomeAuthModal
-          error={params.error}
-          initialMode={authMode}
-          key={`${authMode ?? "home"}-${params.error ?? ""}-${params.message ?? ""}`}
-          message={params.message}
-        />
-      </section>
+              <div className="home-preview-row">
+                <span className="home-preview-avatar">СР</span>
+                <span>
+                  <strong>Самира Р.</strong>
+                  <small>Контакт и телефон привязаны</small>
+                </span>
+                <em>история</em>
+              </div>
+
+              <div className="home-preview-row">
+                <span className="home-preview-avatar">НК</span>
+                <span>
+                  <strong>Новая запись</strong>
+                  <small>Сумма, валюта, дата и время</small>
+                </span>
+                <em>черновик</em>
+              </div>
+            </div>
+          </aside>
+        </section>
+      </div>
     </main>
   );
 }

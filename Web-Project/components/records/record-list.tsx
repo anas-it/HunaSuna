@@ -96,7 +96,7 @@ function SortButton({ label, sortKey, sortState, onSort }: SortButtonProps) {
 
   return (
     <button
-      className="inline-flex cursor-pointer items-center gap-1 rounded-sm text-left font-semibold text-[#475569] transition-colors hover:text-[#1f2937] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#256f6c]"
+      className="record-sort-button inline-flex cursor-pointer items-center gap-1 rounded-sm text-left font-semibold text-[#475569] transition-colors hover:text-[#1f2937] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#256f6c]"
       type="button"
       onClick={() => onSort(sortKey)}
     >
@@ -109,7 +109,7 @@ function SortButton({ label, sortKey, sortState, onSort }: SortButtonProps) {
 function RecordCell({ children, className, record, onOpen }: RecordCellProps) {
   return (
     <button
-      className="min-w-0 cursor-pointer px-3 py-2.5 text-left transition-colors hover:bg-[#f8fafc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#256f6c]"
+      className="record-list-cell flex min-w-0 cursor-pointer items-center px-3 py-2.5 text-left transition-colors hover:bg-[#f8fafc] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#256f6c]"
       type="button"
       onClick={() => onOpen(record)}
     >
@@ -192,11 +192,11 @@ export function RecordList({
 
   return (
     <>
-      <div className="overflow-hidden rounded-lg border border-[#d8dee8] bg-white shadow-sm">
+      <div className="record-list-shell overflow-hidden rounded-lg border border-[#d8dee8] bg-white shadow-sm">
         <div className="hidden overflow-x-auto md:block">
           <div className={widthClass}>
             <div
-              className={`grid ${columnsClass} border-b border-[#d8dee8] bg-[#f8fafc] text-xs text-[#475569]`}
+              className={`record-list-header grid ${columnsClass} border-b border-[#d8dee8] bg-[#f8fafc] text-xs text-[#475569]`}
             >
               <div className="px-3 py-2.5">
                 <SortButton
@@ -243,14 +243,14 @@ export function RecordList({
               ) : null}
             </div>
 
-            <div className="divide-y divide-[#e5eaf1]">
+            <div className="record-list-body">
               {sortedRecords.map((record) => (
                 <div
-                  className={`grid ${columnsClass} min-h-12 items-center text-sm transition-colors hover:bg-[#fbfcfe]`}
+                  className={`record-list-row grid ${columnsClass} min-h-12 items-center text-sm transition-colors hover:bg-[#fbfcfe]`}
                   key={record.id}
                 >
                   <RecordCell
-                    className="text-[#334155]"
+                    className="record-list-date text-[#334155]"
                     onOpen={openRecord}
                     record={record}
                   >
@@ -283,9 +283,9 @@ export function RecordList({
                     {record.rate}
                   </RecordCell>
                   {showEditAction ? (
-                    <div className="border-l border-[#e5eaf1] px-3 py-2">
+                    <div className="record-list-action border-l border-[#e5eaf1] px-3 py-2">
                       <Link
-                        className="inline-flex h-8 w-full items-center justify-center rounded-md border border-[#d8dee8] bg-white px-2 text-xs font-semibold text-[#256f6c] transition-colors hover:bg-[#eef2f6]"
+                        className="record-list-edit inline-flex h-8 w-full items-center justify-center rounded-md border border-[#d8dee8] bg-white px-2 text-xs font-semibold text-[#256f6c] transition-colors hover:bg-[#eef2f6]"
                         href={`/records/${record.id}?returnTo=${encodeURIComponent(returnTo)}`}
                         prefetch={false}
                       >
@@ -299,9 +299,9 @@ export function RecordList({
           </div>
         </div>
 
-        <div className="grid divide-y divide-[#e5eaf1] md:hidden">
+        <div className="record-list-mobile-list grid md:hidden">
           {sortedRecords.map((record) => (
-            <div className="bg-white p-3" key={record.id}>
+            <div className="record-list-mobile-card bg-white p-3" key={record.id}>
               <button
                 className="w-full cursor-pointer rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#256f6c]"
                 type="button"
@@ -344,7 +344,7 @@ export function RecordList({
               {showEditAction ? (
                 <div className="mt-3 flex justify-end">
                   <Link
-                    className="inline-flex h-8 items-center justify-center rounded-md border border-[#d8dee8] bg-white px-3 text-xs font-semibold text-[#256f6c] transition-colors hover:bg-[#eef2f6]"
+                    className="record-list-edit inline-flex h-8 items-center justify-center rounded-md border border-[#d8dee8] bg-white px-3 text-xs font-semibold text-[#256f6c] transition-colors hover:bg-[#eef2f6]"
                     href={`/records/${record.id}?returnTo=${encodeURIComponent(returnTo)}`}
                     prefetch={false}
                   >

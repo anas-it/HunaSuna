@@ -1,5 +1,7 @@
+import { cookies } from "next/headers";
 import { logoutAction } from "@/app/actions";
 import { AppNavigation } from "@/components/layout/app-navigation";
+import { THEME_COOKIE, themeFromCookie } from "@/lib/theme";
 
 type PageShellProps = {
   title: string;
@@ -7,10 +9,13 @@ type PageShellProps = {
   children?: React.ReactNode;
 };
 
-export function PageShell({ title, description, children }: PageShellProps) {
+export async function PageShell({ title, description, children }: PageShellProps) {
+  const cookieStore = await cookies();
+  const theme = themeFromCookie(cookieStore.get(THEME_COOKIE)?.value);
+
   return (
     <main className="min-h-screen bg-[#f7f8fa] text-[#1f2937] lg:flex">
-      <AppNavigation logoutAction={logoutAction} />
+      <AppNavigation initialTheme={theme} logoutAction={logoutAction} />
 
       <section className="min-w-0 flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-10 lg:pt-8">
         <div className="mx-auto max-w-6xl">

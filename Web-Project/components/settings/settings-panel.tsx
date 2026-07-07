@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
+import type { Theme } from "@/lib/theme";
 
 type SensitiveData = {
   email: string | null;
@@ -22,6 +24,7 @@ type RevealSensitiveDataResult =
 type SettingsPanelProps = {
   deleteAccountAction: (formData: FormData) => void | Promise<void>;
   hasEmail: boolean;
+  initialTheme: Theme;
   revealSensitiveDataAction: (formData: FormData) => Promise<RevealSensitiveDataResult>;
   updateEmailAction: (formData: FormData) => void | Promise<void>;
   updatePasswordAction: (formData: FormData) => void | Promise<void>;
@@ -78,6 +81,7 @@ function SensitiveField({
 export function SettingsPanel({
   deleteAccountAction,
   hasEmail,
+  initialTheme,
   revealSensitiveDataAction,
   updateEmailAction,
   updatePasswordAction,
@@ -164,28 +168,37 @@ export function SettingsPanel({
           </div>
         </form>
 
-        <section className="h-fit rounded-lg border border-[#d8dee8] bg-white p-6">
-          <h2 className="text-lg font-semibold">Безопасность</h2>
-          <p className="mt-1 text-sm text-[#64748b]">
-            Пароль и E-mail меняются отдельно.
-          </p>
-          <div className="mt-5 grid gap-3">
-            <Button type="button" variant="secondary" onClick={() => setModal("password")}>
-              Сменить пароль
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => setModal("email")}>
-              Сменить E-mail
-            </Button>
-            <Button
-              className="border-[#f3c2bd] text-[#b42318] hover:bg-[#fff5f5]"
-              type="button"
-              variant="secondary"
-              onClick={() => setModal("delete")}
-            >
-              Удалить аккаунт
-            </Button>
-          </div>
-        </section>
+        <div className="grid h-fit gap-4">
+          <section className="rounded-lg border border-[#d8dee8] bg-white p-6">
+            <h2 className="text-lg font-semibold">Тема</h2>
+            <div className="mt-4">
+              <ThemeToggle initialTheme={initialTheme} />
+            </div>
+          </section>
+
+          <section className="rounded-lg border border-[#d8dee8] bg-white p-6">
+            <h2 className="text-lg font-semibold">Безопасность</h2>
+            <p className="mt-1 text-sm text-[#64748b]">
+              Пароль и E-mail меняются отдельно.
+            </p>
+            <div className="mt-5 grid gap-3">
+              <Button type="button" variant="secondary" onClick={() => setModal("password")}>
+                Сменить пароль
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setModal("email")}>
+                Сменить E-mail
+              </Button>
+              <Button
+                className="border-[#f3c2bd] text-[#b42318] hover:bg-[#fff5f5]"
+                type="button"
+                variant="secondary"
+                onClick={() => setModal("delete")}
+              >
+                Удалить аккаунт
+              </Button>
+            </div>
+          </section>
+        </div>
       </div>
 
       {modal === "password" ? (

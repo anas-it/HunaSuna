@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Logo } from "@/components/layout/logo";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import type { Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const primaryNavItems = [
@@ -28,6 +30,7 @@ const secondaryNavItems = [
 ];
 
 type AppNavigationProps = {
+  initialTheme: Theme;
   logoutAction: () => void | Promise<void>;
 };
 
@@ -35,7 +38,7 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppNavigation({ logoutAction }: AppNavigationProps) {
+export function AppNavigation({ initialTheme, logoutAction }: AppNavigationProps) {
   const pathname = usePathname();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
 
@@ -71,6 +74,7 @@ export function AppNavigation({ logoutAction }: AppNavigationProps) {
         </nav>
 
         <div className="mt-auto grid gap-1 border-t border-[#e5eaf1] pt-4 text-sm">
+          <ThemeToggle compact className="mb-2" initialTheme={initialTheme} />
           {secondaryNavItems.map((item) => {
             const Icon = item.icon;
             const active = isActivePath(pathname, item.href);
@@ -131,6 +135,7 @@ export function AppNavigation({ logoutAction }: AppNavigationProps) {
             </div>
 
             <div className="grid gap-1">
+              <ThemeToggle className="mb-2" initialTheme={initialTheme} />
               {secondaryNavItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActivePath(pathname, item.href);

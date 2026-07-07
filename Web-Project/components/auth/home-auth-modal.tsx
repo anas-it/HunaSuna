@@ -86,9 +86,9 @@ export function HomeAuthModal({
   const shouldShowHomeNotice = !mode && Boolean(error || message);
   const title = isLogin ? "Вход в профиль" : "Регистрация";
   const description = isLogin
-    ? "Откройте свои контакты и записи."
+    ? null
     : "Создайте аккаунт для учета своих записей.";
-  const Icon = isLogin ? LogIn : UserPlus;
+  const HeaderIcon = isLogin ? null : UserPlus;
 
   return (
     <>
@@ -128,15 +128,19 @@ export function HomeAuthModal({
             onMouseDown={(event) => event.stopPropagation()}
             role="dialog"
           >
-            <div className="home-auth-header">
-              <span className="home-auth-icon" aria-hidden="true">
-                <Icon className="h-5 w-5" />
-              </span>
+            <div className={`home-auth-header${isLogin ? " home-auth-header-plain" : ""}`}>
+              {HeaderIcon ? (
+                <span className="home-auth-icon" aria-hidden="true">
+                  <HeaderIcon className="h-5 w-5" />
+                </span>
+              ) : null}
               <div>
                 <h2 id={titleId} className="home-auth-title">
                   {title}
                 </h2>
-                <p className="home-auth-description">{description}</p>
+                {description ? (
+                  <p className="home-auth-description">{description}</p>
+                ) : null}
               </div>
               <button
                 aria-label="Закрыть окно"
