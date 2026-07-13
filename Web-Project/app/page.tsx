@@ -33,7 +33,7 @@ const homeBenefits = [
     title: "История"
   },
   {
-    description: "удаленные записи можно вернуть 7 дней",
+    description: "удалённые записи можно вернуть в течение 7 дней",
     icon: ArchiveRestore,
     title: "Спокойствие"
   }

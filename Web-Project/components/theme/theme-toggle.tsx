@@ -11,18 +11,17 @@ type ThemeToggleProps = {
   initialTheme?: Theme;
 };
 
-function readTheme(): Theme {
-  if (typeof document === "undefined") {
-    return "light";
-  }
-
-  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
-}
+const THEME_CHANGE_EVENT = "hunasuna-theme-change";
 
 function saveTheme(theme: Theme) {
   document.documentElement.dataset.theme = theme;
   document.cookie = `${THEME_COOKIE}=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`;
   window.localStorage.setItem(THEME_COOKIE, theme);
+  window.dispatchEvent(
+    new CustomEvent<Theme>(THEME_CHANGE_EVENT, {
+      detail: theme
+    })
+  );
 }
 
 export function ThemeToggle({
@@ -33,14 +32,17 @@ export function ThemeToggle({
   const [theme, setTheme] = useState<Theme>(initialTheme);
 
   useEffect(() => {
-    const animationFrame = window.requestAnimationFrame(() => {
-      const nextTheme = readTheme();
+    function handleThemeChange(event: Event) {
+      const nextTheme = (event as CustomEvent<Theme>).detail;
 
-      setTheme(nextTheme);
-      saveTheme(nextTheme);
-    });
+      if (nextTheme === "light" || nextTheme === "dark") {
+        setTheme(nextTheme);
+      }
+    }
 
-    return () => window.cancelAnimationFrame(animationFrame);
+    window.addEventListener(THEME_CHANGE_EVENT, handleThemeChange);
+
+    return () => window.removeEventListener(THEME_CHANGE_EVENT, handleThemeChange);
   }, []);
 
   function chooseTheme(nextTheme: Theme) {

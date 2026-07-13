@@ -84,7 +84,8 @@ export function HomeAuthModal({
 
   const isLogin = mode === "login";
   const shouldShowModalNotice = Boolean(mode && mode === initialMode);
-  const shouldShowHomeNotice = !mode && Boolean(error || message);
+  const shouldShowHomeNotice =
+    initialMode === null && !mode && Boolean(error || message);
   const title = isLogin ? "Вход в профиль" : "Регистрация";
 
   return (
