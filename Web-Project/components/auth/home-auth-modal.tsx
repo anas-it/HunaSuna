@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { KeyRound, LogIn, UserPlus, X } from "lucide-react";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type InputHTMLAttributes } from "react";
+import { useFormStatus } from "react-dom";
 import { loginAction, registerAction } from "@/app/actions";
 import { Notice } from "@/components/layout/notice";
 import { Button } from "@/components/ui/button";
@@ -85,10 +86,6 @@ export function HomeAuthModal({
   const shouldShowModalNotice = Boolean(mode && mode === initialMode);
   const shouldShowHomeNotice = !mode && Boolean(error || message);
   const title = isLogin ? "Вход в профиль" : "Регистрация";
-  const description = isLogin
-    ? null
-    : "Создайте аккаунт для учета своих записей.";
-  const HeaderIcon = isLogin ? null : UserPlus;
 
   return (
     <>
@@ -129,18 +126,10 @@ export function HomeAuthModal({
             role="dialog"
           >
             <div className={`home-auth-header${isLogin ? " home-auth-header-plain" : ""}`}>
-              {HeaderIcon ? (
-                <span className="home-auth-icon" aria-hidden="true">
-                  <HeaderIcon className="h-5 w-5" />
-                </span>
-              ) : null}
               <div>
                 <h2 id={titleId} className="home-auth-title">
                   {title}
                 </h2>
-                {description ? (
-                  <p className="home-auth-description">{description}</p>
-                ) : null}
               </div>
               <button
                 aria-label="Закрыть окно"
@@ -213,61 +202,57 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
 function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
   return (
     <>
-      <form action={registerAction} className="home-auth-form">
-        <input
+      <form action={registerAction} autoComplete="off" className="home-auth-form">
+        <RequiredRegisterInput
           autoComplete="username"
-          className="home-auth-input"
+          emptyMessage="Введите логин"
           name="login"
-          placeholder="Логин"
-          required
+          placeholder="Логин *"
         />
         <input
           autoComplete="tel"
           className="home-auth-input"
           name="phone"
-          placeholder="Телефон, если есть"
+          placeholder="Телефон"
         />
         <input
           autoComplete="email"
           className="home-auth-input"
           name="email"
-          placeholder="Email, если есть"
+          placeholder="Email"
           type="email"
         />
-        <input
+        <RequiredRegisterInput
           autoComplete="new-password"
-          className="home-auth-input"
+          emptyMessage="Введите пароль"
           minLength={4}
           name="password"
-          placeholder="Пароль минимум 4 символа"
-          required
+          placeholder="Пароль * (минимум 4 символа)"
           type="password"
         />
-        <input
+        <RequiredRegisterInput
           autoComplete="new-password"
-          className="home-auth-input"
+          emptyMessage="Подтвердите пароль"
           minLength={4}
           name="confirmPassword"
-          placeholder="Подтверждение пароля"
-          required
+          placeholder="Подтверждение пароля *"
           type="password"
         />
-        <input
-          className="home-auth-input"
+        <RequiredRegisterInput
+          autoComplete="off"
+          emptyMessage="Введите секретный вопрос"
+          minLength={3}
           name="secretQuestion"
-          placeholder="Секретный вопрос"
-          required
+          placeholder="Секретный вопрос *"
         />
-        <input
-          className="home-auth-input"
+        <RequiredRegisterInput
+          autoComplete="new-password"
+          emptyMessage="Введите секретный ответ"
+          minLength={2}
           name="secretAnswer"
-          placeholder="Секретный ответ"
-          required
+          placeholder="Секретный ответ *"
         />
-        <Button className="w-full">
-          <UserPlus className="mr-2 h-4 w-4" />
-          Зарегистрироваться
-        </Button>
+        <RegisterSubmitButton />
       </form>
 
       <div className="home-auth-footer">
@@ -280,5 +265,54 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
         </button>
       </div>
     </>
+  );
+}
+
+type RequiredRegisterInputProps = InputHTMLAttributes<HTMLInputElement> & {
+  emptyMessage: string;
+};
+
+function RequiredRegisterInput({
+  emptyMessage,
+  minLength,
+  ...props
+}: RequiredRegisterInputProps) {
+  const [error, setError] = useState("");
+
+  return (
+    <div className="home-auth-field">
+      <input
+        {...props}
+        aria-invalid={Boolean(error)}
+        className={`home-auth-input${error ? " home-auth-input-error" : ""}`}
+        minLength={minLength}
+        onInput={(event) => {
+          if (event.currentTarget.validity.valid) {
+            setError("");
+          }
+        }}
+        onInvalid={(event) => {
+          event.preventDefault();
+          setError(
+            event.currentTarget.validity.valueMissing
+              ? emptyMessage
+              : `Минимум ${minLength} символа`
+          );
+        }}
+        required
+      />
+      {error ? <span className="home-auth-field-error">{error}</span> : null}
+    </div>
+  );
+}
+
+function RegisterSubmitButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button className="w-full" disabled={pending} type="submit">
+      <UserPlus className="mr-2 h-4 w-4" />
+      {pending ? "Регистрация..." : "Зарегистрироваться"}
+    </Button>
   );
 }

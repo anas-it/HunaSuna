@@ -1,9 +1,9 @@
 import {
-  Clock,
-  FileText,
-  Search,
-  ShieldCheck,
-  Users
+  ArchiveRestore,
+  ClipboardList,
+  ContactRound,
+  History,
+  Search
 } from "lucide-react";
 import { cookies } from "next/headers";
 import { HomeAuthModal } from "@/components/auth/home-auth-modal";
@@ -14,12 +14,12 @@ import { THEME_COOKIE, themeFromCookie } from "@/lib/theme";
 const homeBenefits = [
   {
     description: "сумма, курс и время в одном месте",
-    icon: FileText,
+    icon: ClipboardList,
     title: "Записи"
   },
   {
     description: "имена и телефоны всегда рядом",
-    icon: Users,
+    icon: ContactRound,
     title: "Контакты"
   },
   {
@@ -29,12 +29,12 @@ const homeBenefits = [
   },
   {
     description: "автосохранение даты и времени",
-    icon: Clock,
+    icon: History,
     title: "История"
   },
   {
     description: "удаленные записи можно вернуть 7 дней",
-    icon: ShieldCheck,
+    icon: ArchiveRestore,
     title: "Спокойствие"
   }
 ];
@@ -132,8 +132,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
 
                 return (
                   <div className="home-benefit-item" key={benefit.title}>
-                    <span className="home-benefit-icon">
-                      <Icon className="h-4 w-4" />
+                    <span className="home-benefit-icon" aria-hidden="true">
+                      <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
                     </span>
                     <span className="home-benefit-copy">
                       <strong>{benefit.title}</strong>
@@ -145,46 +145,37 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </div>
           </div>
 
-          <aside className="home-preview" aria-label="Пример рабочего журнала">
-            <div className="home-preview-top">
-              <span>Рабочий журнал</span>
-              <strong>Сегодня</strong>
-            </div>
+          <aside className="home-brand-visual" aria-hidden="true">
+            <span className="home-visual-glow" />
+            <span className="home-visual-orbit home-visual-orbit-one" />
+            <span className="home-visual-orbit home-visual-orbit-two" />
+            <span className="home-visual-flow home-visual-flow-one" />
+            <span className="home-visual-flow home-visual-flow-two" />
 
-            <div className="home-preview-search">
-              <Search className="h-4 w-4" />
-              <span>Поиск по контакту или телефону</span>
-            </div>
+            <span className="home-visual-node home-visual-node-record">
+              <ClipboardList strokeWidth={1.7} />
+            </span>
+            <span className="home-visual-node home-visual-node-contact">
+              <ContactRound strokeWidth={1.7} />
+            </span>
+            <span className="home-visual-node home-visual-node-search">
+              <Search strokeWidth={1.7} />
+            </span>
+            <span className="home-visual-node home-visual-node-history">
+              <History strokeWidth={1.7} />
+            </span>
 
-            <div className="home-preview-list">
-              <div className="home-preview-row">
-                <span className="home-preview-avatar">АМ</span>
-                <span>
-                  <strong>Абдул М.</strong>
-                  <small>Запись сохранена в 12:40</small>
-                </span>
-                <em>курс указан</em>
-              </div>
-
-              <div className="home-preview-row">
-                <span className="home-preview-avatar">СР</span>
-                <span>
-                  <strong>Самира Р.</strong>
-                  <small>Контакт и телефон привязаны</small>
-                </span>
-                <em>история</em>
-              </div>
-
-              <div className="home-preview-row">
-                <span className="home-preview-avatar">НК</span>
-                <span>
-                  <strong>Новая запись</strong>
-                  <small>Сумма, валюта, дата и время</small>
-                </span>
-                <em>черновик</em>
-              </div>
-            </div>
+            <span className="home-visual-journal">
+              <span className="home-visual-journal-mark">
+                <ArchiveRestore strokeWidth={1.65} />
+              </span>
+              <span className="home-visual-journal-line home-visual-journal-line-one" />
+              <span className="home-visual-journal-line home-visual-journal-line-two" />
+              <span className="home-visual-journal-line home-visual-journal-line-three" />
+              <span className="home-visual-journal-dot" />
+            </span>
           </aside>
+
         </section>
       </div>
     </main>

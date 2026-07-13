@@ -182,22 +182,28 @@ export async function registerUser(input: RegisterInput, meta?: RequestMeta) {
     }
   }
 
-  const user = await prisma.user.create({
-    data: {
-      login: data.login,
-      loginNormalized,
-      passwordHash: hashPassword(data.password),
-      phone,
-      email,
-      secretQuestion: data.secretQuestion.trim(),
-      secretAnswerHash: hashPassword(normalizeSecretAnswer(data.secretAnswer))
-    }
-  });
+  const user = await prisma.$transaction(async (transaction) => {
+    const createdUser = await transaction.user.create({
+      data: {
+        login: data.login,
+        loginNormalized,
+        passwordHash: hashPassword(data.password),
+        phone,
+        email,
+        secretQuestion: data.secretQuestion.trim(),
+        secretAnswerHash: hashPassword(normalizeSecretAnswer(data.secretAnswer))
+      }
+    });
 
-  await writeSecurityLog({
-    action: "register",
-    userId: user.id,
-    ipAddress: meta?.ipAddress
+    await transaction.securityLog.create({
+      data: {
+        action: "register",
+        userId: createdUser.id,
+        ipAddress: meta?.ipAddress
+      }
+    });
+
+    return createdUser;
   });
 
   return {
